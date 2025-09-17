@@ -347,24 +347,88 @@
 
         function setupSuccessTokens() {
             const tokens = [];
+            
+            // Create god tokens with random values 1-10
             GODS.forEach(god => {
                 tokens.push({ type: 'god', god, value: Math.floor(Math.random() * 10) + 1 });
             });
+            
+            // Add positive tokens
             tokens.push({ type: 'positive', item: 'Shield', value: 10 });
             tokens.push({ type: 'positive', item: 'Spear', value: 10 });
             tokens.push({ type: 'positive', item: 'Chariot', value: 10 });
+            
+            // Add negative tokens
             tokens.push({ type: 'negative', item: 'Morale', value: -3 });
             tokens.push({ type: 'negative', item: 'Plague', value: -5 });
             tokens.push({ type: 'negative', item: 'Firestorm', value: -10 });
+            
+            // Add marriage tokens
             tokens.push({ type: 'marriage', value: 0 });
             tokens.push({ type: 'marriage', value: 0 });
             
-            let displayTokens = shuffleArray(tokens);
-            while (displayTokens.slice(0, 5).filter(t => t.value < 0).length > 0) {
-                displayTokens = shuffleArray(tokens);
+            // Shuffle all tokens
+            let shuffled = shuffleArray(tokens);
+            
+            // Draw first 5 non-negative tokens for initial display
+            let displayTokens = [];
+            let remainingTokens = [...shuffled];
+            
+            while (displayTokens.length < 5 && remainingTokens.length > 0) {
+                const token = remainingTokens.shift();
+                if (token.value >= 0) {
+                    displayTokens.push(token);
+                } else {
+                    // Put negative tokens back for reshuffling
+                    remainingTokens.push(token);
+                }
             }
             
-            gameState.successTokens = displayTokens;
+            // Shuffle remaining tokens again if we had to put negatives back
+            remainingTokens = shuffleArray(remainingTokens);
+            
+            // Combine display tokens with remaining tokens
+            const allTokens = [...displayTokens, ...remainingTokens];
+            
+            // Create board position mapping for 29 tokens (6 per side minus corners)
+            gameState.successTokens = [];
+            gameState.boardTokenPositions = {};
+            
+            let tokenIndex = 0;
+            
+            // Top edge (columns 1-4)
+            for (let col = 1; col <= 4; col++) {
+                if (tokenIndex < allTokens.length) {
+                    gameState.boardTokenPositions[`0-${col}`] = allTokens[tokenIndex];
+                    tokenIndex++;
+                }
+            }
+            
+            // Right edge (rows 1-4)
+            for (let row = 1; row <= 4; row++) {
+                if (tokenIndex < allTokens.length) {
+                    gameState.boardTokenPositions[`${row}-5`] = allTokens[tokenIndex];
+                    tokenIndex++;
+                }
+            }
+            
+            // Bottom edge (columns 4-1)
+            for (let col = 4; col >= 1; col--) {
+                if (tokenIndex < allTokens.length) {
+                    gameState.boardTokenPositions[`5-${col}`] = allTokens[tokenIndex];
+                    tokenIndex++;
+                }
+            }
+            
+            // Left edge (rows 4-1)
+            for (let row = 4; row >= 1; row--) {
+                if (tokenIndex < allTokens.length) {
+                    gameState.boardTokenPositions[`${row}-0`] = allTokens[tokenIndex];
+                    tokenIndex++;
+                }
+            }
+            
+            gameState.successTokens = allTokens;
         }
 
         function updateDisplay() {
@@ -480,27 +544,87 @@
         }
 
         function updateBoardTokens() {
-            const display = document.getElementById('successTokenDisplay');
-            display.innerHTML = '';
+            // Remove old display (only showing top tokens)
+            const oldDisplay = document.getElementById('successTokenDisplay');
+            oldDisplay.innerHTML = '';
             
-            for (let i = 0; i < 6; i++) {
-                if (gameState.successTokens[i]) {
-                    const token = gameState.successTokens[i];
-                    const tokenEl = document.createElement('div');
-                    tokenEl.className = 'boardToken';
-                    
-                    if (token.type === 'god') {
-                        tokenEl.style.background = getGodColor(token.god);
-                        tokenEl.textContent = token.god[0];
-                    } else {
-                        tokenEl.style.background = token.type === 'positive' ? '#ffd700' : 
-                                               token.type === 'negative' ? '#8b0000' : '#90ee90';
-                        tokenEl.textContent = token.type === 'marriage' ? '💍' : 
-                                           token.type === 'positive' ? '+' : '-';
-                    }
-                    display.appendChild(tokenEl);
-                }
+            // Add tokens around entire board perimeter
+            const boardEl = document.getElementById('board');
+            
+            // Remove any existing token displays
+            document.querySelectorAll('.perimeterToken').forEach(el => el.remove());
+            
+            // Create wrapper for perimeter tokens if not exists
+            let tokenWrapper = document.getElementById('tokenPerimeter');
+            if (!tokenWrapper) {
+                tokenWrapper = document.createElement('div');
+                tokenWrapper.id = 'tokenPerimeter';
+                tokenWrapper.style.cssText = `
+                    position: absolute;
+                    top: -35px;
+                    left: -35px;
+                    right: -35px;
+                    bottom: -35px;
+                    pointer-events: none;
+                `;
+                boardEl.parentElement.style.position = 'relative';
+                boardEl.parentElement.appendChild(tokenWrapper);
             }
+            
+            // Add tokens at specific positions
+            Object.entries(gameState.boardTokenPositions || {}).forEach(([pos, token]) => {
+                const [row, col] = pos.split('-').map(Number);
+                const tokenEl = document.createElement('div');
+                tokenEl.className = 'perimeterToken';
+                
+                // Calculate position
+                let top = row * 62 + 10; // 60px cell + 2px gap
+                let left = col * 62 + 10;
+                
+                // Adjust for edge positions
+                if (row === 0) top = -25;
+                if (row === 5) top = 5 * 62 + 35;
+                if (col === 0) left = -25;
+                if (col === 5) left = 5 * 62 + 35;
+                
+                tokenEl.style.cssText = `
+                    position: absolute;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 10px;
+                    font-weight: bold;
+                    top: ${top}px;
+                    left: ${left}px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+                    pointer-events: auto;
+                    cursor: pointer;
+                `;
+                
+                if (token.type === 'god') {
+                    tokenEl.style.background = getGodColor(token.god);
+                    tokenEl.textContent = token.god[0] + token.value;
+                    tokenEl.title = `${token.god}: ${token.value}`;
+                } else if (token.type === 'positive') {
+                    tokenEl.style.background = '#ffd700';
+                    tokenEl.textContent = '+' + token.value;
+                    tokenEl.title = `${token.item}: +${token.value}`;
+                } else if (token.type === 'negative') {
+                    tokenEl.style.background = '#8b0000';
+                    tokenEl.style.color = 'white';
+                    tokenEl.textContent = token.value;
+                    tokenEl.title = `${token.item}: ${token.value}`;
+                } else if (token.type === 'marriage') {
+                    tokenEl.style.background = '#90ee90';
+                    tokenEl.textContent = '💍';
+                    tokenEl.title = 'Marriage to Helen';
+                }
+                
+                tokenWrapper.appendChild(tokenEl);
+            });
         }
 
         function getGodColor(god) {
