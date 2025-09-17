@@ -1,1 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iliad - P2P Board Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.1/peerjs.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2c1810 0%, #4a2420 100%);
+            color: #f5e6d3;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        #gameContainer {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+        }
+        #connectionPanel {
+            text-align: center;
+            padding: 30px;
+        }
+        #connectionPanel h1 {
+            color: #d4af37;
+            margin-bottom: 30px;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        .connection-info {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        input, button {
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+        button {
+            background: #d4af37;
+            color: #2c1810;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover { background: #e5c348; transform: scale(1.05); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #gameBoard {
+            display: none;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(6, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 2px;
+            background: #8b7355;
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .space {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #5a4a3a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .space.blue { background: linear-gradient(135deg, #2e5090, #4a7cc7); }
+        .space.red { background: linear-gradient(135deg, #8b2020, #c73a3a); }
+        .space:hover { border-color: #d4af37; transform: scale(1.05); }
+        .tile {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+        }
+        .tile.blue { background: linear-gradient(135deg, #1e3a6f, #3a5c9e); }
+        .tile.red { background: linear-gradient(135deg, #6b1f1f, #9e3a3a); }
+        .tile.dolos { background: radial-gradient(circle, #4a4a4a, #1a1a1a); }
+        .tile.facedown { background: #3a3a3a; color: transparent; }
+        #playerInfo {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .tokens {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .token {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        .token.zeus { background: #6a6a6a; }
+        .token.apollo { background: #f4a460; }
+        .token.athena { background: #d8bfd8; }
+        .token.poseidon { background: #4682b4; }
+        .token.aphrodite { background: #ff69b4; }
+        .token.positive { background: #ffd700; }
+        .token.negative { background: #8b0000; }
+        .token.marriage { background: #90ee90; }
+        #hand {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            min-height: 60px;
+        }
+        .handTile {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #d4af37;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 20px;
+            color: white;
+            transition: all 0.3s;
+        }
+        .handTile.blue { background: linear-gradient(135deg, #1e3a6f, #3a5c9e); }
+        .handTile.red { background: linear-gradient(135deg, #6b1f1f, #9e3a3a); }
+        .handTile.dolos { background: radial-gradient(circle, #4a4a4a, #1a1a1a) !important; }
+        .handTile:hover { transform: scale(1.1); }
+        .handTile.selected { border-color: #ffff00; box-shadow: 0 0 15px #ffff00; }
+        #successTokenDisplay {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 10px;
+        }
+        .boardToken {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        #message {
+            text-align: center;
+            padding: 10px;
+            background: rgba(212, 175, 55, 0.2);
+            border-radius: 5px;
+            margin-top: 10px;
+            min-height: 40px;
+        }
+        #debugInfo {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="connectionPanel">
+            <h1>⚔️ ILIAD ⚔️</h1>
+            <div class="connection-info">
+                <h3>Start or Join Game</h3>
+                <p>Your ID: <strong id="myId">Generating...</strong></p>
+                <button id="copyId">Copy My ID</button>
+                <br><br>
+                <input type="text" id="peerId" placeholder="Enter opponent's ID">
+                <button id="connectBtn">Connect</button>
+                <br><br>
+                <p id="status">Waiting for connection...</p>
+            </div>
+        </div>
+        
+        <div id="gameBoard">
+            <div id="playerInfo">
+                <h3 id="playerRole"></h3>
+                <div>Turn: <span id="currentTurn"></span></div>
+                <div>Your Tokens:</div>
+                <div id="myTokens" class="tokens"></div>
+                <div>Hand: <span id="handCount"></span></div>
+                <div id="hand"></div>
+                <button id="drawTile" style="margin-top: 10px;">Draw Tile</button>
+                <div id="debugInfo"></div>
+            </div>
+            
+            <div>
+                <div id="successTokenDisplay"></div>
+                <div id="board"></div>
+                <div id="message"></div>
+            </div>
+            
+            <div id="opponentInfo">
+                <h3>Opponent</h3>
+                <div>Their Tokens:</div>
+                <div id="oppTokens" class="tokens"></div>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        const GODS = ['Zeus', 'Apollo', 'Athena', 'Poseidon', 'Aphrodite'];
+        const TILE_VALUES = [1, 1, 2, 2, 3, 3, 4, 4, 5, 'D', 'D', 'D'];
+        
+        let peer, conn;
+        let myId, isHost;
+        let gameState = {
+            board: Array(36).fill(null),
+            currentPlayer: 'blue',
+            blueTokens: [],
+            redTokens: [],
+            successTokens: [],
+            blueDeck: [],
+            redDeck: [],
+            blueHand: [],
+            redHand: [],
+            phase: 'setup'
+        };
+        let selectedTile = null;
+        let myColor = null;
+        let effectMode = null;
+        let effectData = null;
+
+        // Initialize PeerJS
+        peer = new Peer();
+        
+        peer.on('open', id => {
+            document.getElementById('myId').textContent = id;
+            myId = id;
+        });
+
+        peer.on('connection', connection => {
+            conn = connection;
+            isHost = true;
+            myColor = 'blue';
+            setupConnection();
+            initGame();
+        });
+
+        document.getElementById('copyId').addEventListener('click', () => {
+            navigator.clipboard.writeText(myId);
+            document.getElementById('status').textContent = 'ID copied!';
+            setTimeout(() => {
+                document.getElementById('status').textContent = 'Waiting for connection...';
+            }, 2000);
+        });
+
+        document.getElementById('connectBtn').addEventListener('click', () => {
+            const peerId = document.getElementById('peerId').value;
+            if (peerId && peerId !== myId) {
+                conn = peer.connect(peerId);
+                isHost = false;
+                myColor = 'red';
+                conn.on('open', () => {
+                    setupConnection();
+                });
+            }
+        });
+
+        function setupConnection() {
+            document.getElementById('status').textContent = 'Connected!';
+            document.getElementById('connectionPanel').style.display = 'none';
+            document.getElementById('gameBoard').style.display = 'grid';
+            
+            conn.on('data', data => {
+                if (data.type === 'gameState') {
+                    gameState = data.state;
+                    updateDisplay();
+                    showMessage(`Game state received. Your hand has ${(myColor === 'blue' ? gameState.blueHand : gameState.redHand).length} tiles`);
+                } else if (data.type === 'move') {
+                    handleOpponentMove(data);
+                }
+            });
+            
+            conn.on('close', () => {
+                showMessage('Opponent disconnected');
+            });
+            
+            if (isHost) {
+                setTimeout(() => sendGameState(), 100);
+            }
+        }
+
+        function initGame() {
+            // Setup board spaces
+            for (let i = 0; i < 36; i++) {
+                const row = Math.floor(i / 6);
+                const col = i % 6;
+                const isBlue = (row % 2 === 0) ? (col % 2 === 0) : (col % 2 === 1);
+                gameState.board[i] = { color: isBlue ? 'blue' : 'red', tile: null };
+            }
+            
+            // Setup success tokens
+            setupSuccessTokens();
+            
+            // Setup decks
+            gameState.blueDeck = shuffleArray([...TILE_VALUES]);
+            gameState.redDeck = shuffleArray([...TILE_VALUES]);
+            
+            // Initial draw
+            for (let i = 0; i < 2; i++) {
+                gameState.blueHand.push(gameState.blueDeck.pop());
+                gameState.redHand.push(gameState.redDeck.pop());
+            }
+            
+            updateDisplay();
+            showMessage('Game initialized! Blue starts.');
+        }
+
+        function setupSuccessTokens() {
+            const tokens = [];
+            GODS.forEach(god => {
+                tokens.push({ type: 'god', god, value: Math.floor(Math.random() * 10) + 1 });
+            });
+            tokens.push({ type: 'positive', item: 'Shield', value: 10 });
+            tokens.push({ type: 'positive', item: 'Spear', value: 10 });
+            tokens.push({ type: 'positive', item: 'Chariot', value: 10 });
+            tokens.push({ type: 'negative', item: 'Morale', value: -3 });
+            tokens.push({ type: 'negative', item: 'Plague', value: -5 });
+            tokens.push({ type: 'negative', item: 'Firestorm', value: -10 });
+            tokens.push({ type: 'marriage', value: 0 });
+            tokens.push({ type: 'marriage', value: 0 });
+            
+            let displayTokens = shuffleArray(tokens);
+            while (displayTokens.slice(0, 5).filter(t => t.value < 0).length > 0) {
+                displayTokens = shuffleArray(tokens);
+            }
+            
+            gameState.successTokens = displayTokens;
+        }
+
+        function updateDisplay() {
+            // Update player info
+            document.getElementById('playerRole').textContent = 
+                myColor === 'blue' ? '🛡️ Hector (Blue)' : '⚔️ Achilles (Red)';
+            document.getElementById('currentTurn').textContent = 
+                gameState.currentPlayer === myColor ? 'Your turn' : "Opponent's turn";
+            
+            // Update board
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            gameState.board.forEach((space, i) => {
+                const spaceEl = document.createElement('div');
+                spaceEl.className = `space ${space.color}`;
+                spaceEl.dataset.index = i;
+                
+                if (space.tile) {
+                    const tileEl = document.createElement('div');
+                    tileEl.className = `tile ${space.tile.color}`;
+                    if (space.tile.facedown) {
+                        tileEl.classList.add('facedown');
+                    } else if (space.tile.value === 'D') {
+                        tileEl.classList.add('dolos');
+                        tileEl.textContent = '✦';
+                    } else {
+                        tileEl.textContent = space.tile.value;
+                    }
+                    spaceEl.appendChild(tileEl);
+                }
+                
+                spaceEl.addEventListener('click', () => handleBoardClick(i));
+                boardEl.appendChild(spaceEl);
+            });
+            
+            updateTokenDisplay();
+            updateHand();
+            updateBoardTokens();
+        }
+
+        function updateHand() {
+            const handEl = document.getElementById('hand');
+            handEl.innerHTML = '';
+            const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
+            
+            document.getElementById('handCount').textContent = `(${myHand.length} tiles)`;
+            
+            myHand.forEach((tile, i) => {
+                const tileEl = document.createElement('div');
+                tileEl.className = `handTile ${myColor}`;
+                
+                if (tile === 'D') {
+                    tileEl.classList.add('dolos');
+                    tileEl.textContent = '✦';
+                } else {
+                    tileEl.textContent = tile;
+                }
+                
+                if (selectedTile === i) {
+                    tileEl.classList.add('selected');
+                }
+                
+                tileEl.addEventListener('click', () => selectTile(i));
+                handEl.appendChild(tileEl);
+            });
+            
+            // Debug info
+            document.getElementById('debugInfo').innerHTML = `
+                Deck: ${(myColor === 'blue' ? gameState.blueDeck : gameState.redDeck).length} tiles<br>
+                Hand values: [${myHand.join(', ')}]
+            `;
+        }
+
+        function updateTokenDisplay() {
+            const myTokensEl = document.getElementById('myTokens');
+            const oppTokensEl = document.getElementById('oppTokens');
+            const myTokens = myColor === 'blue' ? gameState.blueTokens : gameState.redTokens;
+            const oppTokens = myColor === 'blue' ? gameState.redTokens : gameState.blueTokens;
+            
+            myTokensEl.innerHTML = '';
+            oppTokensEl.innerHTML = '';
+            
+            myTokens.forEach(token => {
+                const tokenEl = createTokenElement(token);
+                myTokensEl.appendChild(tokenEl);
+            });
+            
+            oppTokens.forEach(token => {
+                const tokenEl = createTokenElement(token);
+                oppTokensEl.appendChild(tokenEl);
+            });
+        }
+
+        function createTokenElement(token) {
+            const tokenEl = document.createElement('div');
+            tokenEl.className = 'token';
+            
+            if (token.type === 'god') {
+                tokenEl.classList.add(token.god.toLowerCase());
+                tokenEl.textContent = token.god[0] + token.value;
+            } else if (token.type === 'positive') {
+                tokenEl.classList.add('positive');
+                tokenEl.textContent = '+' + token.value;
+            } else if (token.type === 'negative') {
+                tokenEl.classList.add('negative');
+                tokenEl.textContent = token.value;
+            } else if (token.type === 'marriage') {
+                tokenEl.classList.add('marriage');
+                tokenEl.textContent = '💍';
+            }
+            
+            return tokenEl;
+        }
+
+        function updateBoardTokens() {
+            const display = document.getElementById('successTokenDisplay');
+            display.innerHTML = '';
+            
+            for (let i = 0; i < 6; i++) {
+                if (gameState.successTokens[i]) {
+                    const token = gameState.successTokens[i];
+                    const tokenEl = document.createElement('div');
+                    tokenEl.className = 'boardToken';
+                    
+                    if (token.type === 'god') {
+                        tokenEl.style.background = getGodColor(token.god);
+                        tokenEl.textContent = token.god[0];
+                    } else {
+                        tokenEl.style.background = token.type === 'positive' ? '#ffd700' : 
+                                               token.type === 'negative' ? '#8b0000' : '#90ee90';
+                        tokenEl.textContent = token.type === 'marriage' ? '💍' : 
+                                           token.type === 'positive' ? '+' : '-';
+                    }
+                    display.appendChild(tokenEl);
+                }
+            }
+        }
+
+        function getGodColor(god) {
+            const colors = {
+                'Zeus': '#6a6a6a',
+                'Apollo': '#f4a460',
+                'Athena': '#d8bfd8',
+                'Poseidon': '#4682b4',
+                'Aphrodite': '#ff69b4'
+            };
+            return colors[god] || '#808080';
+        }
+
+        function selectTile(index) {
+            if (gameState.currentPlayer !== myColor) {
+                showMessage("It's not your turn!");
+                return;
+            }
+            selectedTile = selectedTile === index ? null : index;
+            updateHand();
+            if (selectedTile !== null) {
+                const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
+                showMessage(`Selected tile: ${myHand[selectedTile]}`);
+            }
+        }
+
+        function handleBoardClick(index) {
+            if (gameState.currentPlayer !== myColor) {
+                showMessage("It's not your turn!");
+                return;
+            }
+            
+            if (effectMode) {
+                handleEffectClick(index);
+                return;
+            }
+            
+            if (selectedTile === null) {
+                showMessage("Select a tile from your hand first!");
+                return;
+            }
+            
+            const space = gameState.board[index];
+            if (space.tile) {
+                showMessage("Space already occupied!");
+                return;
+            }
+            if (space.color !== myColor && !hasNeighbor(index)) {
+                showMessage("Can only place on your color or adjacent to existing tiles!");
+                return;
+            }
+            
+            const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
+            const tileValue = myHand[selectedTile];
+            
+            // Place tile
+            space.tile = { value: tileValue, color: myColor, facedown: false };
+            myHand.splice(selectedTile, 1);
+            selectedTile = null;
+            
+            // Send move first
+            sendMove({ action: 'placeTile', index, tile: space.tile });
+            
+            // Apply effect
+            if (tileValue !== 'D' && tileValue !== 5) {
+                applyTileEffect(tileValue, index);
+            } else {
+                endTurn();
+            }
+            
+            updateDisplay();
+        }
+
+        function hasNeighbor(index) {
+            const neighbors = getNeighbors(index);
+            return neighbors.some(i => gameState.board[i] && gameState.board[i].tile);
+        }
+
+        function getNeighbors(index) {
+            const neighbors = [];
+            const row = Math.floor(index / 6);
+            const col = index % 6;
+            
+            if (row > 0) neighbors.push(index - 6);
+            if (row < 5) neighbors.push(index + 6);
+            if (col > 0) neighbors.push(index - 1);
+            if (col < 5) neighbors.push(index + 1);
+            
+            return neighbors;
+        }
+
+        function applyTileEffect(value, index) {
+            switch(value) {
+                case 1:
+                    showMessage("Effect: Click an opponent's tile to reposition");
+                    effectMode = 'reposition-opponent';
+                    break;
+                case 2:
+                    showMessage("Effect: Click your tile to reposition");
+                    effectMode = 'reposition-own';
+                    break;
+                case 3:
+                    showMessage("Effect: Swap success token");
+                    effectMode = 'swap-token';
+                    effectData = index;
+                    break;
+                case 4:
+                    showMessage("Effect: Tiles flipped!");
+                    effectMode = 'flip';
+                    effectData = index;
+                    handleFlipEffect(index);
+                    break;
+                default:
+                    endTurn();
+            }
+        }
+
+        function handleEffectClick(index) {
+            const space = gameState.board[index];
+            
+            if (effectMode === 'reposition-opponent') {
+                if (space.tile && space.tile.color !== myColor && isAccessible(index)) {
+                    const tile = space.tile;
+                    space.tile = null;
+                    effectMode = 'place-repositioned';
+                    effectData = tile;
+                    showMessage("Click empty space to place tile");
+                    sendMove({ action: 'reposition', from: index });
+                }
+            } else if (effectMode === 'reposition-own') {
+                if (space.tile && space.tile.color === myColor && isAccessible(index)) {
+                    const tile = space.tile;
+                    space.tile = null;
+                    effectMode = 'place-repositioned';
+                    effectData = tile;
+                    showMessage("Click empty space to place tile");
+                    sendMove({ action: 'reposition', from: index });
+                }
+            } else if (effectMode === 'place-repositioned') {
+                if (!space.tile && (space.color === effectData.color || hasNeighbor(index))) {
+                    space.tile = effectData;
+                    effectMode = null;
+                    effectData = null;
+                    sendMove({ action: 'placeRepositioned', to: index, tile: space.tile });
+                    endTurn();
+                }
+            }
+            
+            updateDisplay();
+        }
+
+        function isAccessible(index) {
+            const neighbors = getNeighbors(index);
+            return neighbors.some(i => !gameState.board[i] || !gameState.board[i].tile);
+        }
+
+        function handleFlipEffect(index) {
+            const space = gameState.board[index];
+            space.tile.facedown = true;
+            
+            const neighbors = getNeighbors(index);
+            const oppTiles = neighbors.filter(i => 
+                gameState.board[i] && gameState.board[i].tile && 
+                gameState.board[i].tile.color !== myColor
+            );
+            
+            if (oppTiles.length > 0) {
+                gameState.board[oppTiles[0]].tile.facedown = true;
+            }
+            
+            effectMode = null;
+            sendMove({ action: 'flip', index, flipped: oppTiles[0] });
+            endTurn();
+        }
+
+        function checkLines() {
+            // Check rows
+            for (let row = 0; row < 6; row++) {
+                if (isLineFull(row * 6, 1)) {
+                    scoreLine(row * 6, 1);
+                }
+            }
+            // Check columns
+            for (let col = 0; col < 6; col++) {
+                if (isLineFull(col, 6)) {
+                    scoreLine(col, 6);
+                }
+            }
+        }
+
+        function isLineFull(start, step) {
+            for (let i = 0; i < 6; i++) {
+                if (!gameState.board[start + i * step].tile) return false;
+            }
+            return true;
+        }
+
+        function scoreLine(start, step) {
+            const blueTiles = [];
+            const redTiles = [];
+            
+            for (let i = 0; i < 6; i++) {
+                const tile = gameState.board[start + i * step].tile;
+                if (!tile.facedown) {
+                    if (tile.color === 'blue') {
+                        blueTiles.push(tile.value === 'D' ? 0 : tile.value);
+                    } else {
+                        redTiles.push(tile.value === 'D' ? 0 : tile.value);
+                    }
+                }
+            }
+            
+            const blueScore = blueTiles.reduce((a, b) => a + b, 0);
+            const redScore = redTiles.reduce((a, b) => a + b, 0);
+            
+            showMessage(`Line scored! Blue: ${blueScore}, Red: ${redScore}`);
+        }
+
+        function endTurn() {
+            checkLines();
+            gameState.currentPlayer = gameState.currentPlayer === 'blue' ? 'red' : 'blue';
+            updateDisplay();
+            sendGameState();
+        }
+
+        function handleOpponentMove(data) {
+            if (data.action === 'placeTile') {
+                gameState.board[data.index].tile = data.tile;
+            } else if (data.action === 'reposition') {
+                gameState.board[data.from].tile = null;
+            } else if (data.action === 'placeRepositioned') {
+                gameState.board[data.to].tile = data.tile;
+            } else if (data.action === 'flip') {
+                gameState.board[data.index].tile.facedown = true;
+                if (data.flipped !== undefined) {
+                    gameState.board[data.flipped].tile.facedown = true;
+                }
+            }
+            updateDisplay();
+        }
+
+        function sendMove(move) {
+            if (conn && conn.open) {
+                conn.send({ type: 'move', ...move });
+            }
+        }
+
+        function sendGameState() {
+            if (conn && conn.open) {
+                conn.send({ type: 'gameState', state: gameState });
+            }
+        }
+
+        function showMessage(msg) {
+            document.getElementById('message').textContent = msg;
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        document.getElementById('drawTile').addEventListener('click', () => {
+            if (gameState.currentPlayer !== myColor) {
+                showMessage("It's not your turn!");
+                return;
+            }
+            const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
+            const myDeck = myColor === 'blue' ? gameState.blueDeck : gameState.redDeck;
+            
+            if (myHand.length < 2 && myDeck.length > 0) {
+                myHand.push(myDeck.pop());
+                updateDisplay();
+                sendGameState();
+                showMessage(`Drew tile: ${myHand[myHand.length - 1]}`);
+            } else if (myDeck.length === 0) {
+                showMessage("No more tiles in deck!");
+            } else {
+                showMessage("Hand is full (max 2 tiles)!");
+            }
+        });
+    </script>
+</body>
+</html>
