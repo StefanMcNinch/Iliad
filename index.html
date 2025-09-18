@@ -213,7 +213,7 @@
         <div id="gameBoard">
             <div id="playerInfo">
                 <h3 id="playerRole"></h3>
-                <div>Turn: <span id="currentTurn"></span></div>
+                <div>Mode: <span id="currentTurn"></span></div>
                 <div>Your Tokens:</div>
                 <div id="myTokens" class="tokens"></div>
                 <div>Hand: <span id="handCount"></span></div>
@@ -238,7 +238,7 @@
 
     <script>
         const GODS = ['Zeus', 'Apollo', 'Athena', 'Poseidon', 'Aphrodite'];
-        const TILE_VALUES = [1, 1, 2, 2, 3, 3, 4, 4, 5, 'D', 'D', 'D'];
+        const TILE_VALUES = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 'D', 'D', 'D'];  // 18 tiles per player
         
         let peer, conn;
         let myId, isHost;
@@ -258,6 +258,7 @@
         let myColor = null;
         let effectMode = null;
         let effectData = null;
+        let selectedBoardTile = null;  // Track selected tile from board
 
         // Initialize PeerJS
         peer = new Peer();
@@ -371,8 +372,7 @@
             // Update player info
             document.getElementById('playerRole').textContent = 
                 myColor === 'blue' ? '🛡️ Hector (Blue)' : '⚔️ Achilles (Red)';
-            document.getElementById('currentTurn').textContent = 
-                gameState.currentPlayer === myColor ? 'Your turn' : "Opponent's turn";
+            document.getElementById('currentTurn').textContent = 'Free Play Mode';
             
             // Update board
             const boardEl = document.getElementById('board');
@@ -394,6 +394,11 @@
                         tileEl.textContent = space.tile.value;
                     }
                     spaceEl.appendChild(tileEl);
+                }
+                
+                if (selectedBoardTile === i) {
+                    spaceEl.style.border = '3px solid #ffff00';
+                    spaceEl.style.boxShadow = '0 0 10px #ffff00';
                 }
                 
                 spaceEl.addEventListener('click', () => handleBoardClick(i));
@@ -433,7 +438,7 @@
             
             // Debug info
             document.getElementById('debugInfo').innerHTML = `
-                Deck: ${(myColor === 'blue' ? gameState.blueDeck : gameState.redDeck).length} tiles<br>
+                Deck: ${(myColor === 'blue' ? gameState.blueDeck : gameState.redDeck).length}/18 tiles remaining<br>
                 Hand values: [${myHand.join(', ')}]
             `;
         }
@@ -515,10 +520,6 @@
         }
 
         function selectTile(index) {
-            if (gameState.currentPlayer !== myColor) {
-                showMessage("It's not your turn!");
-                return;
-            }
             selectedTile = selectedTile === index ? null : index;
             updateHand();
             if (selectedTile !== null) {
@@ -528,26 +529,65 @@
         }
 
         function handleBoardClick(index) {
-            if (gameState.currentPlayer !== myColor) {
-                showMessage("It's not your turn!");
-                return;
-            }
-            
             if (effectMode) {
                 handleEffectClick(index);
                 return;
             }
             
-            if (selectedTile === null) {
-                showMessage("Select a tile from your hand first!");
+            const space = gameState.board[index];
+            
+            // If clicking on an existing tile
+            if (space.tile) {
+                // Only allow picking up your own tiles (unless in effect mode)
+                if (space.tile.color === myColor) {
+                    if (selectedBoardTile === index) {
+                        // Deselect if clicking same tile
+                        selectedBoardTile = null;
+                        showMessage("Tile deselected");
+                    } else {
+                        // Pick up the tile
+                        selectedBoardTile = index;
+                        selectedTile = null; // Deselect hand tile if any
+                        showMessage(`Picked up ${space.tile.value} tile. Click empty space to reposition.`);
+                    }
+                    updateDisplay();
+                    return;
+                } else {
+                    showMessage("You can only move your own tiles!");
+                    return;
+                }
+            }
+            
+            // If we have a board tile selected, try to place it
+            if (selectedBoardTile !== null) {
+                const sourceTile = gameState.board[selectedBoardTile].tile;
+                
+                // Check if new position is valid
+                if (space.color !== myColor && !hasNeighborExcept(index, selectedBoardTile)) {
+                    showMessage("Can only place on your color or adjacent to existing tiles!");
+                    return;
+                }
+                
+                // Move the tile
+                gameState.board[selectedBoardTile].tile = null;
+                space.tile = sourceTile;
+                
+                // Send move
+                sendMove({ action: 'reposition', from: selectedBoardTile, to: index, tile: sourceTile });
+                
+                selectedBoardTile = null;
+                checkLines();
+                updateDisplay();
+                showMessage(`Moved tile to new position`);
                 return;
             }
             
-            const space = gameState.board[index];
-            if (space.tile) {
-                showMessage("Space already occupied!");
+            // If we have a hand tile selected, place it normally
+            if (selectedTile === null) {
+                showMessage("Select a tile from your hand or board first!");
                 return;
             }
+            
             if (space.color !== myColor && !hasNeighbor(index)) {
                 showMessage("Can only place on your color or adjacent to existing tiles!");
                 return;
@@ -568,7 +608,7 @@
             if (tileValue !== 'D' && tileValue !== 5) {
                 applyTileEffect(tileValue, index);
             } else {
-                endTurn();
+                checkLines();
             }
             
             updateDisplay();
@@ -590,6 +630,11 @@
             if (col < 5) neighbors.push(index + 1);
             
             return neighbors;
+        }
+
+        function hasNeighborExcept(index, exceptIndex) {
+            const neighbors = getNeighbors(index);
+            return neighbors.some(i => i !== exceptIndex && gameState.board[i] && gameState.board[i].tile);
         }
 
         function applyTileEffect(value, index) {
@@ -645,7 +690,7 @@
                     effectMode = null;
                     effectData = null;
                     sendMove({ action: 'placeRepositioned', to: index, tile: space.tile });
-                    endTurn();
+                    checkLines();
                 }
             }
             
@@ -673,7 +718,7 @@
             
             effectMode = null;
             sendMove({ action: 'flip', index, flipped: oppTiles[0] });
-            endTurn();
+            checkLines();
         }
 
         function checkLines() {
@@ -704,7 +749,7 @@
             
             for (let i = 0; i < 6; i++) {
                 const tile = gameState.board[start + i * step].tile;
-                if (!tile.facedown) {
+                if (tile && !tile.facedown) {
                     if (tile.color === 'blue') {
                         blueTiles.push(tile.value === 'D' ? 0 : tile.value);
                     } else {
@@ -721,7 +766,6 @@
 
         function endTurn() {
             checkLines();
-            gameState.currentPlayer = gameState.currentPlayer === 'blue' ? 'red' : 'blue';
             updateDisplay();
             sendGameState();
         }
@@ -731,6 +775,7 @@
                 gameState.board[data.index].tile = data.tile;
             } else if (data.action === 'reposition') {
                 gameState.board[data.from].tile = null;
+                gameState.board[data.to].tile = data.tile;
             } else if (data.action === 'placeRepositioned') {
                 gameState.board[data.to].tile = data.tile;
             } else if (data.action === 'flip') {
@@ -768,10 +813,6 @@
         }
 
         document.getElementById('drawTile').addEventListener('click', () => {
-            if (gameState.currentPlayer !== myColor) {
-                showMessage("It's not your turn!");
-                return;
-            }
             const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
             const myDeck = myColor === 'blue' ? gameState.blueDeck : gameState.redDeck;
             
