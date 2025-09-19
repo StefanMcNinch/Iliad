@@ -487,7 +487,7 @@
             gameState.tokenSlots = [];
             const totalSlots = 24;
             const boardSize = 380; // 6*60 + 2*10 padding
-            const borderOffset = 40; // Distance from board edge to center of tokens
+            const borderOffset = 55; // Distance from board edge to center of tokens (in the border area)
             
             for (let i = 0; i < totalSlots; i++) {
                 let x, y;
@@ -496,23 +496,23 @@
                 if (i < 6) {
                     // Top edge (6 tokens)
                     const spacing = boardSize / 6;
-                    x = -borderOffset + spacing/2 + (i * spacing);
+                    x = spacing/2 + (i * spacing) - 20;
                     y = -borderOffset;
                 } else if (i < 12) {
                     // Right edge (6 tokens)
                     const spacing = boardSize / 6;
-                    x = boardSize + borderOffset;
-                    y = -borderOffset + spacing/2 + ((i - 6) * spacing);
+                    x = boardSize + borderOffset - 20;
+                    y = spacing/2 + ((i - 6) * spacing) - 20;
                 } else if (i < 18) {
                     // Bottom edge (6 tokens)
                     const spacing = boardSize / 6;
-                    x = boardSize + borderOffset - spacing/2 - ((i - 12) * spacing);
-                    y = boardSize + borderOffset;
+                    x = boardSize - spacing/2 - ((i - 12) * spacing) - 20;
+                    y = boardSize + borderOffset - 20;
                 } else {
                     // Left edge (6 tokens)
                     const spacing = boardSize / 6;
                     x = -borderOffset;
-                    y = boardSize + borderOffset - spacing/2 - ((i - 18) * spacing);
+                    y = boardSize - spacing/2 - ((i - 18) * spacing) - 20;
                 }
                 
                 gameState.tokenSlots.push({ x, y, occupied: false, index: i });
