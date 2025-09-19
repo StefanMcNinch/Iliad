@@ -71,6 +71,40 @@
             padding: 10px;
             border-radius: 10px;
             position: relative;
+            margin: 50px;
+        }
+        #boardBorder {
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            right: -50px;
+            bottom: -50px;
+            border: 45px solid rgba(139, 115, 85, 0.3);
+            border-radius: 15px;
+            pointer-events: none;
+        }
+        #tokenDropZone {
+            position: absolute;
+            top: -45px;
+            left: -45px;
+            right: -45px;
+            bottom: -45px;
+            pointer-events: none;
+        }
+        .tokenSlot {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            pointer-events: all;
+        }
+        .tokenSlot.occupied {
+            border-color: transparent;
+        }
+        .tokenSlot.dragover {
+            background: rgba(212, 175, 55, 0.3);
+            border-color: #d4af37;
         }
         .space {
             width: 60px;
@@ -184,7 +218,7 @@
         .successToken.athena { background: #d8bfd8; }
         .successToken.poseidon { background: #4682b4; }
         .successToken.aphrodite { background: #ff69b4; }
-        .successToken.positive { background: #ffd700; }
+        .successToken.positive { background: #ffd700; color: black; }
         .successToken.negative { background: #8b0000; color: white; }
         .successToken.marriage { background: #90ee90; }
         .tile-mark {
@@ -282,6 +316,7 @@
             redTokens: [],
             successTokens: [],
             tokenPositions: {},  // Track positions of all tokens
+            tokenSlots: [],      // Track slot positions around board
             blueDeck: [],
             redDeck: [],
             blueHand: [],
@@ -383,37 +418,112 @@
 
         function setupSuccessTokens() {
             const tokens = [];
+            
+            // 5 god tokens with random values 1-10
             GODS.forEach(god => {
                 tokens.push({ type: 'god', god, value: Math.floor(Math.random() * 10) + 1, id: `token-${god}` });
             });
-            tokens.push({ type: 'positive', item: 'Shield', value: 10, id: 'token-shield' });
-            tokens.push({ type: 'positive', item: 'Spear', value: 10, id: 'token-spear' });
-            tokens.push({ type: 'positive', item: 'Chariot', value: 10, id: 'token-chariot' });
-            tokens.push({ type: 'negative', item: 'Morale', value: -3, id: 'token-morale' });
-            tokens.push({ type: 'negative', item: 'Plague', value: -5, id: 'token-plague' });
-            tokens.push({ type: 'negative', item: 'Firestorm', value: -10, id: 'token-firestorm' });
+            
+            // 8 positive tokens (various items, all +10)
+            const positiveItems = ['Shield', 'Spear', 'Chariot', 'Helm', 'Sword', 'Bow', 'Armor', 'Horse'];
+            positiveItems.forEach((item, i) => {
+                tokens.push({ type: 'positive', item, value: 10, id: `token-positive-${i}` });
+            });
+            
+            // 8 negative tokens (various penalties)
+            const negativeItems = [
+                { item: 'Weakened', value: -3 },
+                { item: 'Morale', value: -3 },
+                { item: 'Plague', value: -5 },
+                { item: 'Discord', value: -5 },
+                { item: 'Exhaustion', value: -5 },
+                { item: 'Famine', value: -10 },
+                { item: 'Firestorm', value: -10 },
+                { item: 'Curse', value: -10 }
+            ];
+            negativeItems.forEach((neg, i) => {
+                tokens.push({ type: 'negative', item: neg.item, value: neg.value, id: `token-negative-${i}` });
+            });
+            
+            // 2 marriage tokens (Helen)
             tokens.push({ type: 'marriage', value: 0, id: 'token-marriage1' });
             tokens.push({ type: 'marriage', value: 0, id: 'token-marriage2' });
             
+            // 6 additional mixed tokens to reach 29 total
+            tokens.push({ type: 'positive', item: 'Glory', value: 10, id: 'token-glory' });
+            tokens.push({ type: 'positive', item: 'Favor', value: 10, id: 'token-favor' });
+            tokens.push({ type: 'negative', item: 'Betrayal', value: -5, id: 'token-betrayal' });
+            tokens.push({ type: 'negative', item: 'Storm', value: -5, id: 'token-storm' });
+            tokens.push({ type: 'positive', item: 'Victory', value: 10, id: 'token-victory' });
+            tokens.push({ type: 'negative', item: 'Defeat', value: -10, id: 'token-defeat' });
+            
+            // Shuffle tokens
             let displayTokens = shuffleArray(tokens);
-            while (displayTokens.slice(0, 5).filter(t => t.value < 0).length > 0) {
-                displayTokens = shuffleArray(tokens);
+            
+            // Ensure first 5 displayed are non-negative (per rules)
+            let finalTokens = [];
+            let remaining = [...displayTokens];
+            let nonNegCount = 0;
+            
+            // First pull 5 non-negative tokens
+            for (let i = 0; i < remaining.length && nonNegCount < 5; i++) {
+                if (remaining[i].value >= 0) {
+                    finalTokens.push(remaining[i]);
+                    remaining.splice(i, 1);
+                    nonNegCount++;
+                    i--;
+                }
             }
             
-            // Initialize token positions around the board
-            displayTokens.forEach((token, i) => {
-                const angle = (i / displayTokens.length) * Math.PI * 2;
-                const radius = 220;
-                const centerX = 190;
-                const centerY = 190;
-                gameState.tokenPositions[token.id] = {
-                    x: centerX + Math.cos(angle) * radius,
-                    y: centerY + Math.sin(angle) * radius,
-                    location: 'board'
-                };
+            // Add the rest
+            finalTokens = [...finalTokens, ...shuffleArray(remaining)];
+            
+            // Create token slots around the board - now 29 slots
+            gameState.tokenSlots = [];
+            const totalSlots = 29;
+            
+            for (let i = 0; i < totalSlots; i++) {
+                let x, y;
+                const boardSize = 380; // 6*60 + 2*10 padding
+                const offset = -25; // Distance from board edge
+                
+                // Distribute 29 tokens: 8-7-7-7 pattern (top-right-bottom-left)
+                if (i < 8) {
+                    // Top edge (8 tokens)
+                    x = offset + 15 + (i * 45);
+                    y = offset;
+                } else if (i < 15) {
+                    // Right edge (7 tokens)
+                    x = offset + boardSize;
+                    y = offset + 25 + ((i - 8) * 50);
+                } else if (i < 22) {
+                    // Bottom edge (7 tokens)
+                    x = offset + boardSize - 15 - ((i - 15) * 50);
+                    y = offset + boardSize;
+                } else {
+                    // Left edge (7 tokens)
+                    x = offset;
+                    y = offset + boardSize - 25 - ((i - 22) * 50);
+                }
+                
+                gameState.tokenSlots.push({ x, y, occupied: false, index: i });
+            }
+            
+            // Place all 29 tokens in slots
+            finalTokens.forEach((token, i) => {
+                if (i < gameState.tokenSlots.length) {
+                    const slot = gameState.tokenSlots[i];
+                    gameState.tokenPositions[token.id] = {
+                        x: slot.x,
+                        y: slot.y,
+                        location: 'board',
+                        slotIndex: i
+                    };
+                    slot.occupied = token.id;
+                }
             });
             
-            gameState.successTokens = displayTokens;
+            gameState.successTokens = finalTokens;
         }
 
         function updateDisplay() {
@@ -563,8 +673,9 @@
             // Remove old token display
             document.getElementById('successTokenDisplay').innerHTML = '';
             
-            // Remove existing draggable tokens
+            // Remove existing draggable tokens and slots
             document.querySelectorAll('.successToken').forEach(el => el.remove());
+            document.querySelectorAll('.tokenSlot').forEach(el => el.remove());
             
             // Remove old event listeners
             const boardContainer = document.getElementById('board').parentElement;
@@ -573,6 +684,55 @@
             
             const boardEl = newBoardContainer.querySelector('#board');
             boardEl.innerHTML = '';
+            
+            // Create border and drop zone
+            let borderEl = newBoardContainer.querySelector('#boardBorder');
+            if (!borderEl) {
+                borderEl = document.createElement('div');
+                borderEl.id = 'boardBorder';
+                newBoardContainer.appendChild(borderEl);
+            }
+            
+            let dropZone = newBoardContainer.querySelector('#tokenDropZone');
+            if (!dropZone) {
+                dropZone = document.createElement('div');
+                dropZone.id = 'tokenDropZone';
+                newBoardContainer.appendChild(dropZone);
+            }
+            
+            // Create token slots
+            if (gameState.tokenSlots) {
+                gameState.tokenSlots.forEach(slot => {
+                    const slotEl = document.createElement('div');
+                    slotEl.className = 'tokenSlot';
+                    slotEl.dataset.slotIndex = slot.index;
+                    slotEl.style.left = (slot.x + 45) + 'px'; // Adjust for border
+                    slotEl.style.top = (slot.y + 45) + 'px';
+                    
+                    if (slot.occupied) {
+                        slotEl.classList.add('occupied');
+                    }
+                    
+                    slotEl.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        slotEl.classList.add('dragover');
+                    });
+                    
+                    slotEl.addEventListener('dragleave', () => {
+                        slotEl.classList.remove('dragover');
+                    });
+                    
+                    slotEl.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        slotEl.classList.remove('dragover');
+                        handleSlotDrop(e, slot.index);
+                    });
+                    
+                    dropZone.appendChild(slotEl);
+                });
+            }
             
             // Recreate board spaces
             gameState.board.forEach((space, i) => {
@@ -663,8 +823,8 @@
                 // Set position
                 const pos = gameState.tokenPositions[token.id];
                 if (pos.location === 'board') {
-                    tokenEl.style.left = pos.x + 'px';
-                    tokenEl.style.top = pos.y + 'px';
+                    tokenEl.style.left = (pos.x + 45) + 'px'; // Adjust for border
+                    tokenEl.style.top = (pos.y + 45) + 'px';
                     newBoardContainer.appendChild(tokenEl);
                 } else if (pos.location === myColor) {
                     tokenEl.style.position = 'relative';
@@ -710,6 +870,16 @@
             draggedToken = e.target;
             e.target.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
+            
+            // Clear old slot if token was in one
+            const tokenId = e.target.id;
+            const pos = gameState.tokenPositions[tokenId];
+            if (pos && pos.slotIndex !== undefined) {
+                const slot = gameState.tokenSlots[pos.slotIndex];
+                if (slot) {
+                    slot.occupied = false;
+                }
+            }
         }
         
         function handleTokenDragEnd(e) {
@@ -728,15 +898,46 @@
             
             const boardContainer = document.getElementById('board').parentElement;
             const rect = boardContainer.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const x = e.clientX - rect.left - 45; // Adjust for border
+            const y = e.clientY - rect.top - 45;
             
             const tokenId = draggedToken.id;
             gameState.tokenPositions[tokenId] = { x, y, location: 'board' };
             
             draggedToken.style.position = 'absolute';
-            draggedToken.style.left = x + 'px';
-            draggedToken.style.top = y + 'px';
+            draggedToken.style.left = (x + 45) + 'px';
+            draggedToken.style.top = (y + 45) + 'px';
+            boardContainer.appendChild(draggedToken);
+            
+            sendMove({ action: 'moveToken', tokenId, position: gameState.tokenPositions[tokenId] });
+        }
+        
+        function handleSlotDrop(e, slotIndex) {
+            if (!draggedToken) return;
+            
+            const slot = gameState.tokenSlots[slotIndex];
+            const tokenId = draggedToken.id;
+            
+            // Clear any other slot that might have this token
+            gameState.tokenSlots.forEach(s => {
+                if (s.occupied === tokenId) {
+                    s.occupied = false;
+                }
+            });
+            
+            // Place token in slot
+            slot.occupied = tokenId;
+            gameState.tokenPositions[tokenId] = { 
+                x: slot.x, 
+                y: slot.y, 
+                location: 'board',
+                slotIndex: slotIndex
+            };
+            
+            const boardContainer = document.getElementById('board').parentElement;
+            draggedToken.style.position = 'absolute';
+            draggedToken.style.left = (slot.x + 45) + 'px';
+            draggedToken.style.top = (slot.y + 45) + 'px';
             boardContainer.appendChild(draggedToken);
             
             sendMove({ action: 'moveToken', tokenId, position: gameState.tokenPositions[tokenId] });
