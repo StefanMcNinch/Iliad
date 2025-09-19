@@ -107,31 +107,21 @@
             padding: 15px;
             border-radius: 10px;
         }
-        .tokens {
+        .tokenStorage {
+            min-height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed #d4af37;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
-            margin-top: 10px;
         }
-        .token {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        .tokenStorage.dragover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #ffff00;
         }
-        .token.zeus { background: #6a6a6a; }
-        .token.apollo { background: #f4a460; }
-        .token.athena { background: #d8bfd8; }
-        .token.poseidon { background: #4682b4; }
-        .token.aphrodite { background: #ff69b4; }
-        .token.positive { background: #ffd700; }
-        .token.negative { background: #8b0000; }
-        .token.marriage { background: #90ee90; }
         #hand {
             display: flex;
             gap: 10px;
@@ -167,15 +157,46 @@
             justify-content: space-around;
             padding: 0 10px;
         }
-        .boardToken {
-            width: 30px;
-            height: 30px;
+        .successToken {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            cursor: grab;
+            position: absolute;
+            z-index: 100;
+            transition: none;
+        }
+        .successToken:active {
+            cursor: grabbing;
+        }
+        .successToken.dragging {
+            opacity: 0.5;
+            z-index: 1000;
+        }
+        .successToken.zeus { background: #6a6a6a; }
+        .successToken.apollo { background: #f4a460; }
+        .successToken.athena { background: #d8bfd8; }
+        .successToken.poseidon { background: #4682b4; }
+        .successToken.aphrodite { background: #ff69b4; }
+        .successToken.positive { background: #ffd700; }
+        .successToken.negative { background: #8b0000; color: white; }
+        .successToken.marriage { background: #90ee90; }
+        .tile-mark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: #ff0000;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
         }
         #message {
             text-align: center;
@@ -214,11 +235,12 @@
             <div id="playerInfo">
                 <h3 id="playerRole"></h3>
                 <div>Mode: <span id="currentTurn"></span></div>
-                <div>Your Tokens:</div>
-                <div id="myTokens" class="tokens"></div>
+                <div>Your Token Storage:</div>
+                <div id="myTokenStorage" class="tokenStorage"></div>
                 <div>Hand: <span id="handCount"></span></div>
                 <div id="hand"></div>
                 <button id="drawTile" style="margin-top: 10px;">Draw Tile</button>
+                <button id="checkLines" style="margin-top: 10px;">Check for Scoring Lines</button>
                 <div id="debugInfo"></div>
             </div>
             
@@ -226,12 +248,23 @@
                 <div id="successTokenDisplay"></div>
                 <div id="board"></div>
                 <div id="message"></div>
+                <div id="tileReference" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; margin-top: 15px;">
+                    <h4 style="color: #d4af37; margin-bottom: 10px;">Tile Effects Reference</h4>
+                    <div style="font-size: 14px;">
+                        <div><strong>1:</strong> Reposition one opponent's accessible tile</div>
+                        <div><strong>2:</strong> Reposition one of your own accessible tiles</div>
+                        <div><strong>3:</strong> Swap a success token (after scoring a line)</div>
+                        <div><strong>4:</strong> Flip this tile and one opponent neighbor tile</div>
+                        <div><strong>5:</strong> No effect</div>
+                        <div><strong>✦ (Dolos):</strong> No effect (counts as 0 in scoring)</div>
+                    </div>
+                </div>
             </div>
             
             <div id="opponentInfo">
                 <h3>Opponent</h3>
-                <div>Their Tokens:</div>
-                <div id="oppTokens" class="tokens"></div>
+                <div>Their Token Storage:</div>
+                <div id="oppTokenStorage" class="tokenStorage"></div>
             </div>
         </div>
     </div>
@@ -248,6 +281,7 @@
             blueTokens: [],
             redTokens: [],
             successTokens: [],
+            tokenPositions: {},  // Track positions of all tokens
             blueDeck: [],
             redDeck: [],
             blueHand: [],
@@ -259,6 +293,7 @@
         let effectMode = null;
         let effectData = null;
         let selectedBoardTile = null;  // Track selected tile from board
+        let markedTiles = new Set();  // Track tiles marked with X
 
         // Initialize PeerJS
         peer = new Peer();
@@ -349,21 +384,34 @@
         function setupSuccessTokens() {
             const tokens = [];
             GODS.forEach(god => {
-                tokens.push({ type: 'god', god, value: Math.floor(Math.random() * 10) + 1 });
+                tokens.push({ type: 'god', god, value: Math.floor(Math.random() * 10) + 1, id: `token-${god}` });
             });
-            tokens.push({ type: 'positive', item: 'Shield', value: 10 });
-            tokens.push({ type: 'positive', item: 'Spear', value: 10 });
-            tokens.push({ type: 'positive', item: 'Chariot', value: 10 });
-            tokens.push({ type: 'negative', item: 'Morale', value: -3 });
-            tokens.push({ type: 'negative', item: 'Plague', value: -5 });
-            tokens.push({ type: 'negative', item: 'Firestorm', value: -10 });
-            tokens.push({ type: 'marriage', value: 0 });
-            tokens.push({ type: 'marriage', value: 0 });
+            tokens.push({ type: 'positive', item: 'Shield', value: 10, id: 'token-shield' });
+            tokens.push({ type: 'positive', item: 'Spear', value: 10, id: 'token-spear' });
+            tokens.push({ type: 'positive', item: 'Chariot', value: 10, id: 'token-chariot' });
+            tokens.push({ type: 'negative', item: 'Morale', value: -3, id: 'token-morale' });
+            tokens.push({ type: 'negative', item: 'Plague', value: -5, id: 'token-plague' });
+            tokens.push({ type: 'negative', item: 'Firestorm', value: -10, id: 'token-firestorm' });
+            tokens.push({ type: 'marriage', value: 0, id: 'token-marriage1' });
+            tokens.push({ type: 'marriage', value: 0, id: 'token-marriage2' });
             
             let displayTokens = shuffleArray(tokens);
             while (displayTokens.slice(0, 5).filter(t => t.value < 0).length > 0) {
                 displayTokens = shuffleArray(tokens);
             }
+            
+            // Initialize token positions around the board
+            displayTokens.forEach((token, i) => {
+                const angle = (i / displayTokens.length) * Math.PI * 2;
+                const radius = 220;
+                const centerX = 190;
+                const centerY = 190;
+                gameState.tokenPositions[token.id] = {
+                    x: centerX + Math.cos(angle) * radius,
+                    y: centerY + Math.sin(angle) * radius,
+                    location: 'board'
+                };
+            });
             
             gameState.successTokens = displayTokens;
         }
@@ -393,6 +441,15 @@
                     } else {
                         tileEl.textContent = space.tile.value;
                     }
+                    
+                    // Add X mark if tile is marked
+                    if (markedTiles.has(i)) {
+                        const markEl = document.createElement('div');
+                        markEl.className = 'tile-mark';
+                        markEl.textContent = '✕';
+                        tileEl.appendChild(markEl);
+                    }
+                    
                     spaceEl.appendChild(tileEl);
                 }
                 
@@ -402,12 +459,30 @@
                 }
                 
                 spaceEl.addEventListener('click', () => handleBoardClick(i));
+                
+                // Add right-click to mark tiles
+                spaceEl.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    
+                    if (space.tile) {
+                        if (markedTiles.has(i)) {
+                            markedTiles.delete(i);
+                            showMessage("Removed X mark");
+                        } else {
+                            markedTiles.add(i);
+                            showMessage("Added X mark");
+                        }
+                        updateDisplay();
+                        
+                        // Send mark update to opponent
+                        sendMove({ action: 'toggleMark', index: i, marked: markedTiles.has(i) });
+                    }
+                });
                 boardEl.appendChild(spaceEl);
             });
             
-            updateTokenDisplay();
-            updateHand();
             updateBoardTokens();
+            updateHand();
         }
 
         function updateHand() {
@@ -485,27 +560,212 @@
         }
 
         function updateBoardTokens() {
-            const display = document.getElementById('successTokenDisplay');
-            display.innerHTML = '';
+            // Remove old token display
+            document.getElementById('successTokenDisplay').innerHTML = '';
             
-            for (let i = 0; i < 6; i++) {
-                if (gameState.successTokens[i]) {
-                    const token = gameState.successTokens[i];
-                    const tokenEl = document.createElement('div');
-                    tokenEl.className = 'boardToken';
-                    
-                    if (token.type === 'god') {
-                        tokenEl.style.background = getGodColor(token.god);
-                        tokenEl.textContent = token.god[0];
+            // Remove existing draggable tokens
+            document.querySelectorAll('.successToken').forEach(el => el.remove());
+            
+            // Remove old event listeners
+            const boardContainer = document.getElementById('board').parentElement;
+            const newBoardContainer = boardContainer.cloneNode(true);
+            boardContainer.parentNode.replaceChild(newBoardContainer, boardContainer);
+            
+            const boardEl = newBoardContainer.querySelector('#board');
+            boardEl.innerHTML = '';
+            
+            // Recreate board spaces
+            gameState.board.forEach((space, i) => {
+                const spaceEl = document.createElement('div');
+                spaceEl.className = `space ${space.color}`;
+                spaceEl.dataset.index = i;
+                
+                if (space.tile) {
+                    const tileEl = document.createElement('div');
+                    tileEl.className = `tile ${space.tile.color}`;
+                    if (space.tile.facedown) {
+                        tileEl.classList.add('facedown');
+                    } else if (space.tile.value === 'D') {
+                        tileEl.classList.add('dolos');
+                        tileEl.textContent = '✦';
                     } else {
-                        tokenEl.style.background = token.type === 'positive' ? '#ffd700' : 
-                                               token.type === 'negative' ? '#8b0000' : '#90ee90';
-                        tokenEl.textContent = token.type === 'marriage' ? '💍' : 
-                                           token.type === 'positive' ? '+' : '-';
+                        tileEl.textContent = space.tile.value;
                     }
-                    display.appendChild(tokenEl);
+                    
+                    // Add X mark if tile is marked
+                    if (markedTiles.has(i)) {
+                        const markEl = document.createElement('div');
+                        markEl.className = 'tile-mark';
+                        markEl.textContent = '✕';
+                        tileEl.appendChild(markEl);
+                    }
+                    
+                    spaceEl.appendChild(tileEl);
                 }
-            }
+                
+                if (selectedBoardTile === i) {
+                    spaceEl.style.border = '3px solid #ffff00';
+                    spaceEl.style.boxShadow = '0 0 10px #ffff00';
+                }
+                
+                spaceEl.addEventListener('click', () => handleBoardClick(i));
+                
+                // Add right-click to mark tiles
+                spaceEl.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    
+                    if (space.tile) {
+                        if (markedTiles.has(i)) {
+                            markedTiles.delete(i);
+                            showMessage("Removed X mark");
+                        } else {
+                            markedTiles.add(i);
+                            showMessage("Added X mark");
+                        }
+                        updateDisplay();
+                        
+                        // Send mark update to opponent
+                        sendMove({ action: 'toggleMark', index: i, marked: markedTiles.has(i) });
+                    }
+                });
+                
+                boardEl.appendChild(spaceEl);
+            });
+            
+            newBoardContainer.style.position = 'relative';
+            
+            // Create draggable tokens
+            gameState.successTokens.forEach(token => {
+                const tokenEl = document.createElement('div');
+                tokenEl.className = 'successToken';
+                tokenEl.id = token.id;
+                tokenEl.draggable = true;
+                
+                // Set token appearance
+                if (token.type === 'god') {
+                    tokenEl.classList.add(token.god.toLowerCase());
+                    tokenEl.textContent = token.god[0] + token.value;
+                    tokenEl.title = `${token.god}: ${token.value}`;
+                } else if (token.type === 'positive') {
+                    tokenEl.classList.add('positive');
+                    tokenEl.textContent = '+' + token.value;
+                    tokenEl.title = `${token.item}: +${token.value}`;
+                } else if (token.type === 'negative') {
+                    tokenEl.classList.add('negative');
+                    tokenEl.textContent = token.value;
+                    tokenEl.title = `${token.item}: ${token.value}`;
+                } else if (token.type === 'marriage') {
+                    tokenEl.classList.add('marriage');
+                    tokenEl.textContent = '💍';
+                    tokenEl.title = 'Marriage to Helen';
+                }
+                
+                // Set position
+                const pos = gameState.tokenPositions[token.id];
+                if (pos.location === 'board') {
+                    tokenEl.style.left = pos.x + 'px';
+                    tokenEl.style.top = pos.y + 'px';
+                    newBoardContainer.appendChild(tokenEl);
+                } else if (pos.location === myColor) {
+                    tokenEl.style.position = 'relative';
+                    tokenEl.style.left = '';
+                    tokenEl.style.top = '';
+                    document.getElementById('myTokenStorage').appendChild(tokenEl);
+                } else if (pos.location === (myColor === 'blue' ? 'red' : 'blue')) {
+                    tokenEl.style.position = 'relative';
+                    tokenEl.style.left = '';
+                    tokenEl.style.top = '';
+                    document.getElementById('oppTokenStorage').appendChild(tokenEl);
+                }
+                
+                // Add drag event listeners
+                tokenEl.addEventListener('dragstart', handleTokenDragStart);
+                tokenEl.addEventListener('dragend', handleTokenDragEnd);
+            });
+            
+            // Add drop zone listeners
+            newBoardContainer.addEventListener('dragover', handleBoardDragOver);
+            newBoardContainer.addEventListener('drop', handleBoardDrop);
+            
+            const myStorage = document.getElementById('myTokenStorage');
+            const newMyStorage = myStorage.cloneNode(false);
+            myStorage.parentNode.replaceChild(newMyStorage, myStorage);
+            
+            // Move tokens to new storage
+            document.querySelectorAll('.successToken').forEach(token => {
+                const pos = gameState.tokenPositions[token.id];
+                if (pos && pos.location === myColor) {
+                    newMyStorage.appendChild(token);
+                }
+            });
+            
+            newMyStorage.addEventListener('dragover', handleStorageDragOver);
+            newMyStorage.addEventListener('drop', handleStorageDrop);
+            newMyStorage.addEventListener('dragleave', handleStorageDragLeave);
+        }
+        
+        let draggedToken = null;
+        
+        function handleTokenDragStart(e) {
+            draggedToken = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleTokenDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedToken = null;
+        }
+        
+        function handleBoardDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+        
+        function handleBoardDrop(e) {
+            e.preventDefault();
+            if (!draggedToken) return;
+            
+            const boardContainer = document.getElementById('board').parentElement;
+            const rect = boardContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const tokenId = draggedToken.id;
+            gameState.tokenPositions[tokenId] = { x, y, location: 'board' };
+            
+            draggedToken.style.position = 'absolute';
+            draggedToken.style.left = x + 'px';
+            draggedToken.style.top = y + 'px';
+            boardContainer.appendChild(draggedToken);
+            
+            sendMove({ action: 'moveToken', tokenId, position: gameState.tokenPositions[tokenId] });
+        }
+        
+        function handleStorageDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('dragover');
+        }
+        
+        function handleStorageDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+        
+        function handleStorageDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            if (!draggedToken) return;
+            
+            const tokenId = draggedToken.id;
+            gameState.tokenPositions[tokenId] = { x: 0, y: 0, location: myColor };
+            
+            draggedToken.style.position = 'relative';
+            draggedToken.style.left = '';
+            draggedToken.style.top = '';
+            e.currentTarget.appendChild(draggedToken);
+            
+            sendMove({ action: 'moveToken', tokenId, position: gameState.tokenPositions[tokenId] });
         }
 
         function getGodColor(god) {
@@ -576,7 +836,6 @@
                 sendMove({ action: 'reposition', from: selectedBoardTile, to: index, tile: sourceTile });
                 
                 selectedBoardTile = null;
-                checkLines();
                 updateDisplay();
                 showMessage(`Moved tile to new position`);
                 return;
@@ -607,8 +866,6 @@
             // Apply effect
             if (tileValue !== 'D' && tileValue !== 5) {
                 applyTileEffect(tileValue, index);
-            } else {
-                checkLines();
             }
             
             updateDisplay();
@@ -632,6 +889,17 @@
             return neighbors;
         }
 
+        function getGodColor(god) {
+            const colors = {
+                'Zeus': '#6a6a6a',
+                'Apollo': '#f4a460',
+                'Athena': '#d8bfd8',
+                'Poseidon': '#4682b4',
+                'Aphrodite': '#ff69b4'
+            };
+            return colors[god] || '#808080';
+        }
+
         function hasNeighborExcept(index, exceptIndex) {
             const neighbors = getNeighbors(index);
             return neighbors.some(i => i !== exceptIndex && gameState.board[i] && gameState.board[i].tile);
@@ -648,9 +916,8 @@
                     effectMode = 'reposition-own';
                     break;
                 case 3:
-                    showMessage("Effect: Swap success token");
-                    effectMode = 'swap-token';
-                    effectData = index;
+                    showMessage("Effect: Token swap not implemented - no effect");
+                    // Token swapping would need to be implemented after line scoring
                     break;
                 case 4:
                     showMessage("Effect: Tiles flipped!");
@@ -659,7 +926,7 @@
                     handleFlipEffect(index);
                     break;
                 default:
-                    endTurn();
+                    break;
             }
         }
 
@@ -690,7 +957,6 @@
                     effectMode = null;
                     effectData = null;
                     sendMove({ action: 'placeRepositioned', to: index, tile: space.tile });
-                    checkLines();
                 }
             }
             
@@ -718,7 +984,6 @@
             
             effectMode = null;
             sendMove({ action: 'flip', index, flipped: oppTiles[0] });
-            checkLines();
         }
 
         function checkLines() {
@@ -783,6 +1048,14 @@
                 if (data.flipped !== undefined) {
                     gameState.board[data.flipped].tile.facedown = true;
                 }
+            } else if (data.action === 'toggleMark') {
+                if (data.marked) {
+                    markedTiles.add(data.index);
+                } else {
+                    markedTiles.delete(data.index);
+                }
+            } else if (data.action === 'moveToken') {
+                gameState.tokenPositions[data.tokenId] = data.position;
             }
             updateDisplay();
         }
@@ -826,6 +1099,11 @@
             } else {
                 showMessage("Hand is full (max 2 tiles)!");
             }
+        });
+        
+        document.getElementById('checkLines').addEventListener('click', () => {
+            checkLines();
+            sendGameState();
         });
     </script>
 </body>
