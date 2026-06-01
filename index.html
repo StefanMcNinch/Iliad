@@ -274,7 +274,7 @@
     }
 
     function initLocalDeck() {
-        myDeck = shuffle([...TILE_VALUES]);
+        myDeck = shuffle([...TILE_VALUES]); // exactly 18 tiles: 3× each of 1-5 + 3× Dolos
         myHand = [ myDeck.pop(), myDeck.pop() ];
     }
 
@@ -336,7 +336,8 @@
     function render() {
         document.getElementById('playerRole').textContent = myColor === 'blue' ? '🛡 Hector (Blue)' : '⚔ Achilles (Red)';
         document.getElementById('handCount').textContent = `(${myHand.length})`;
-        document.getElementById('debugInfo').innerHTML = `Deck: ${myDeck.length}/18 &nbsp;|&nbsp; Hand: [${myHand.join(', ')}]`;
+        document.getElementById('debugInfo').innerHTML =
+            `Deck: ${myDeck.length} · Hand: [${myHand.join(', ')}] · Board: ${gs.board.filter(s=>s.tile&&s.tile.color===myColor).length} · Total: ${myDeck.length + myHand.length + gs.board.filter(s=>s.tile&&s.tile.color===myColor).length}/18`;
 
         // Hand (draggable)
         const handEl = document.getElementById('hand'); handEl.innerHTML = '';
@@ -437,7 +438,7 @@
         if (token.type === 'god') {
             el.classList.add(token.god.toLowerCase());
             const labels = { Zeus:'Ze', Apollo:'Ap', Athena:'At', Poseidon:'Po', Aphrodite:'Af' };
-            el.textContent = labels[token.god] + token.value;
+            el.innerHTML = `<span style="display:flex;flex-direction:column;align-items:center;line-height:1.1"><span>${labels[token.god]}</span><span>${token.value}</span></span>`;
             el.title = `${token.god}: ${token.value}`;
         }
         else if (token.type === 'positive'){ el.classList.add('positive'); el.textContent = `+${token.value}`; el.title = `${token.item}: +${token.value}`; }
@@ -547,8 +548,13 @@
 
     // ── Buttons ────────────────────────────────────────────────────────────────
     document.getElementById('drawTile').addEventListener('click', () => {
-        if (myHand.length >= 2) { showMsg('Hand is full (max 2)'); return; }
-        if (myDeck.length === 0){ showMsg('Deck is empty'); return; }
+        const totalTilesLeft = myDeck.length + myHand.length;
+        if (myHand.length >= 2)   { showMsg('Hand is full (max 2)'); return; }
+        if (myDeck.length === 0)  { showMsg('Deck is empty — ' + (totalTilesLeft) + ' tiles still on the board'); return; }
+        // Guard: never allow drawing if hand+deck already at 18
+        const tilesOnBoard = gs.board.filter(s => s.tile && s.tile.color === myColor).length;
+        const totalAccountedFor = myHand.length + myDeck.length + tilesOnBoard;
+        if (totalAccountedFor >= 18 && myDeck.length === 0) { showMsg('All 18 tiles accounted for'); return; }
         myHand.push(myDeck.pop());
         render();
         showMsg(`Drew ${myHand[myHand.length-1]}`);
