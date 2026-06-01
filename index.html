@@ -114,9 +114,31 @@
         .successToken.marriage  { background: radial-gradient(circle at 35% 30%, #88e888, #389838); border-color:#185818; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3); color:#083008; }
         .tokenStorage .successToken, #tokenDisplay .successToken { position: relative; transform: none; }
         /* Display row */
-        #tokenDisplay { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; padding: 8px 12px; background: rgba(0,0,0,0.25); border: 1px dashed rgba(212,175,55,0.25); border-radius: 8px; min-height: 56px; align-items: center; }
-        #tokenDisplay.dragover { background: rgba(212,175,55,0.1); border-color: #d4af37; }
-        .displayLabel { width: 100%; text-align: center; font-size: 0.65em; letter-spacing: 0.12em; color: rgba(212,175,55,0.5); margin-bottom: 4px; }
+        #tokenDisplay {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(100,60,0,0.15));
+            border: 1px solid rgba(212,175,55,0.4);
+            border-radius: 10px;
+            min-height: 64px;
+            align-items: center;
+            width: 100%;
+            box-shadow: inset 0 0 20px rgba(212,175,55,0.05), 0 4px 12px rgba(0,0,0,0.4);
+        }
+        #tokenDisplay.dragover { background: rgba(212,175,55,0.15); border-color: #ffff00; }
+        .displayLabel {
+            width: 100%;
+            text-align: center;
+            font-size: 0.65em;
+            letter-spacing: 0.15em;
+            color: rgba(212,175,55,0.7);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
         /* Message & Reference */
         #message { text-align: center; padding: 10px 16px; background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.03)); border: 1px solid rgba(212,175,55,0.14); border-radius: 6px; margin-top: 12px; min-height: 40px; width: 100%; font-size: 0.8em; letter-spacing: 0.04em; color: #d8c090; }
         #tileReference { background: linear-gradient(150deg, rgba(28,10,3,0.92), rgba(16,6,2,0.92)); border: 1px solid rgba(212,175,55,0.13); padding: 12px 14px; border-radius: 8px; margin-top: 12px; font-size: 11.5px; width: 100%; color: #b8a070; }
@@ -261,15 +283,28 @@
         const all = []; let idc = 0;
         const add = o => { o.id = `tk${idc++}`; all.push(o); };
 
-        // 5 gods × 3 copies each, varied values 1–10  (15)
-        GODS.forEach(god => { for (let k = 0; k < 3; k++) add({ type:'god', god, value: 1 + Math.floor(Math.random() * 10) }); });
-        // Positive +10 — Achilles' Shield, Hector's Spear, Chariot × 2 each  (6)
-        ["Achilles' Shield", "Hector's Spear", "Chariot"].forEach(item => { for (let k = 0; k < 2; k++) add({ type:'positive', item, value: 10 }); });
-        // Negative — Weakened Morale −3, Plague −5, Firestorm −10 × 2 each  (6)
+        // Per rulebook: 5 gods (one each, value 1-10), 3 positive, 3 negative, 2 marriage = 13 named
+        // Remaining 16 are extra copies to reach 29 total
+        // Gods × 3 copies each (varied values) = 15
+        GODS.forEach(god => {
+            add({ type:'god', god, value: 1 + Math.floor(Math.random() * 10) });
+            add({ type:'god', god, value: 1 + Math.floor(Math.random() * 10) });
+            add({ type:'god', god, value: 1 + Math.floor(Math.random() * 10) });
+        });
+        // Positives × 3 (one of each named token) = 3... but we need more variety so 2 of each = 6
+        ["Achilles' Shield", "Hector's Spear", "Chariot"].forEach(item => {
+            add({ type:'positive', item, value: 10 });
+            add({ type:'positive', item, value: 10 });
+        });
+        // Negatives × 2 each = 6
         [{item:'Weakened Morale',value:-3},{item:'Plague',value:-5},{item:'Firestorm',value:-10}]
-            .forEach(n => { for (let k = 0; k < 2; k++) add({ type:'negative', item:n.item, value:n.value }); });
-        // 2 marriage tokens  (2)   → total 29
+            .forEach(n => {
+                add({ type:'negative', item:n.item, value:n.value });
+                add({ type:'negative', item:n.item, value:n.value });
+            });
+        // 2 marriage = 2
         add({ type:'marriage', value:0 }); add({ type:'marriage', value:0 });
+        // Total: 15 + 6 + 6 + 2 = 29 ✓
 
         const pool = shuffle(all);
 
@@ -399,7 +434,12 @@
     function makeTokenEl(token) {
         const el = document.createElement('div');
         el.id = token.id; el.className = 'successToken'; el.draggable = true;
-        if (token.type === 'god')        { el.classList.add(token.god.toLowerCase()); el.textContent = token.god[0] + token.value; el.title = `${token.god}: ${token.value}`; }
+        if (token.type === 'god') {
+            el.classList.add(token.god.toLowerCase());
+            const labels = { Zeus:'Ze', Apollo:'Ap', Athena:'At', Poseidon:'Po', Aphrodite:'Af' };
+            el.textContent = labels[token.god] + token.value;
+            el.title = `${token.god}: ${token.value}`;
+        }
         else if (token.type === 'positive'){ el.classList.add('positive'); el.textContent = `+${token.value}`; el.title = `${token.item}: +${token.value}`; }
         else if (token.type === 'negative'){ el.classList.add('negative'); el.textContent = token.value; el.title = `${token.item}: ${token.value}`; }
         else                              { el.classList.add('marriage'); el.textContent = '💍'; el.title = 'Marriage to Helen'; }
