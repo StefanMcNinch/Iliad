@@ -8,478 +8,126 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Cinzel', Georgia, serif;
             background:
                 radial-gradient(ellipse at 20% 20%, rgba(140,50,10,0.55) 0%, transparent 55%),
                 radial-gradient(ellipse at 80% 80%, rgba(50,10,70,0.45) 0%, transparent 55%),
                 linear-gradient(160deg, #0c0502 0%, #1c0a06 50%, #100304 100%);
-            color: #f0dfc0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            color: #f0dfc0; min-height: 100vh;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
         }
-
         #gameContainer {
-            max-width: 1200px;
-            width: 100%;
+            max-width: 1200px; width: 100%;
             background: linear-gradient(150deg, rgba(32,12,6,0.97), rgba(18,6,3,0.97));
-            border-radius: 16px;
-            padding: 24px;
+            border-radius: 16px; padding: 24px;
             border: 1px solid rgba(212,175,55,0.3);
-            box-shadow:
-                0 0 0 2px rgba(70,35,5,0.7),
-                0 30px 90px rgba(0,0,0,0.9),
-                inset 0 1px 0 rgba(212,175,55,0.12);
+            box-shadow: 0 0 0 2px rgba(70,35,5,0.7), 0 30px 90px rgba(0,0,0,0.9), inset 0 1px 0 rgba(212,175,55,0.12);
         }
-
-        /* ── Connection Panel ── */
+        /* Connection Panel */
         #connectionPanel { text-align: center; padding: 50px 30px; }
-
         #connectionPanel h1 {
-            font-family: 'Cinzel Decorative', serif;
-            font-weight: 700;
-            color: #d4af37;
-            font-size: 4.5em;
-            letter-spacing: 0.2em;
-            margin-bottom: 4px;
-            text-shadow:
-                0 0 30px rgba(212,175,55,0.7),
-                0 0 60px rgba(212,175,55,0.3),
-                3px 5px 12px rgba(0,0,0,0.95);
+            font-family: 'Cinzel Decorative', serif; font-weight: 700; color: #d4af37;
+            font-size: 4.5em; letter-spacing: 0.2em; margin-bottom: 4px;
+            text-shadow: 0 0 30px rgba(212,175,55,0.7), 0 0 60px rgba(212,175,55,0.3), 3px 5px 12px rgba(0,0,0,0.95);
         }
-
-        .subtitle {
-            font-size: 0.7em;
-            color: rgba(212,175,55,0.5);
-            letter-spacing: 0.45em;
-            text-transform: uppercase;
-            margin-bottom: 36px;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 20px auto;
-            max-width: 480px;
-            color: rgba(212,175,55,0.4);
-            font-size: 0.75em;
-            letter-spacing: 0.3em;
-        }
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent);
-        }
-
-        .connection-info {
-            margin: 20px auto;
-            padding: 24px;
-            background: rgba(212,175,55,0.04);
-            border: 1px solid rgba(212,175,55,0.18);
-            border-radius: 12px;
-            max-width: 480px;
-            box-shadow: inset 0 1px 0 rgba(212,175,55,0.07);
-        }
-        .connection-info h3 {
-            color: #d4af37;
-            letter-spacing: 0.12em;
-            margin-bottom: 16px;
-            font-size: 0.85em;
-        }
-
-        input {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(212,175,55,0.3) !important;
-            color: #f0dfc0;
-            font-family: 'Cinzel', serif;
-            border-radius: 5px;
-        }
+        .subtitle { font-size: 0.7em; color: rgba(212,175,55,0.5); letter-spacing: 0.45em; text-transform: uppercase; margin-bottom: 36px; }
+        .divider { display: flex; align-items: center; gap: 12px; margin: 20px auto; max-width: 480px; color: rgba(212,175,55,0.4); font-size: 0.75em; letter-spacing: 0.3em; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent); }
+        .connection-info { margin: 20px auto; padding: 24px; background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.18); border-radius: 12px; max-width: 480px; }
+        .connection-info h3 { color: #d4af37; letter-spacing: 0.12em; margin-bottom: 16px; font-size: 0.85em; }
+        input { background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.3) !important; color: #f0dfc0; font-family: 'Cinzel', serif; border-radius: 5px; padding: 10px 20px; margin: 5px; font-size: 16px; }
         input::placeholder { color: rgba(240,223,192,0.3); }
-
         button {
-            background: linear-gradient(150deg, #c89828, #d4af37, #b08818);
-            color: #1a0800;
-            cursor: pointer;
-            font-weight: 700;
-            font-family: 'Cinzel', serif;
-            letter-spacing: 0.06em;
-            transition: all 0.2s;
-            border-radius: 5px;
-            box-shadow:
-                0 3px 12px rgba(0,0,0,0.5),
-                inset 0 1px 0 rgba(255,255,255,0.25),
-                inset 0 -1px 0 rgba(0,0,0,0.2);
+            background: linear-gradient(150deg, #c89828, #d4af37, #b08818); color: #1a0800;
+            cursor: pointer; font-weight: 700; font-family: 'Cinzel', serif; letter-spacing: 0.06em;
+            transition: all 0.2s; border-radius: 5px; border: none; padding: 10px 20px; margin: 5px; font-size: 16px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2);
         }
-        button:hover {
-            background: linear-gradient(150deg, #d8a830, #ecc040, #c89828);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.55), 0 0 12px rgba(212,175,55,0.25);
-        }
+        button:hover { background: linear-gradient(150deg, #d8a830, #ecc040, #c89828); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.55), 0 0 12px rgba(212,175,55,0.25); }
         button:active { transform: translateY(0); }
-
-        /* ── Game Layout ── */
-        #gameBoard {
-            display: none;
-            grid-template-columns: 210px 1fr 210px;
-            gap: 20px;
-            align-items: start;
-        }
-
-        /* ── Player Panels ── */
-        .playerPanel {
-            background: linear-gradient(160deg, rgba(38,16,6,0.92), rgba(22,8,3,0.92));
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(212,175,55,0.18);
-            box-shadow:
-                0 6px 24px rgba(0,0,0,0.6),
-                inset 0 1px 0 rgba(212,175,55,0.07);
-        }
-        .playerPanel h3 {
-            color: #d4af37;
-            letter-spacing: 0.1em;
-            margin-bottom: 10px;
-            font-size: 0.9em;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(212,175,55,0.18);
-        }
-        #modeLabel {
-            color: rgba(212,175,55,0.45);
-            font-size: 0.68em;
-            letter-spacing: 0.15em;
-        }
-
-        .tokenStorage {
-            min-height: 80px;
-            background: rgba(0,0,0,0.22);
-            border: 1px dashed rgba(212,175,55,0.28);
-            border-radius: 8px;
-            padding: 8px; margin-top: 8px;
-            display: flex; flex-wrap: wrap; gap: 5px;
-        }
-        .tokenStorage.dragover {
-            background: rgba(212,175,55,0.1);
-            border-color: #d4af37;
-            box-shadow: inset 0 0 12px rgba(212,175,55,0.08);
-        }
-
-        /* ── Hand ── */
-        #hand {
-            display: flex; gap: 8px;
-            margin-top: 10px; flex-wrap: wrap;
-            min-height: 58px;
-        }
+        /* Layout */
+        #gameBoard { display: none; grid-template-columns: 210px 1fr 210px; gap: 20px; align-items: start; }
+        .playerPanel { background: linear-gradient(160deg, rgba(38,16,6,0.92), rgba(22,8,3,0.92)); padding: 15px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.18); box-shadow: 0 6px 24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(212,175,55,0.07); }
+        .playerPanel h3 { color: #d4af37; letter-spacing: 0.1em; margin-bottom: 10px; font-size: 0.9em; padding-bottom: 8px; border-bottom: 1px solid rgba(212,175,55,0.18); }
+        #modeLabel { color: rgba(212,175,55,0.45); font-size: 0.68em; letter-spacing: 0.15em; }
+        .panelLabel { margin-top: 12px; font-size: 0.72em; letter-spacing: 0.08em; color: rgba(212,175,55,0.6); }
+        .tokenStorage { min-height: 80px; background: rgba(0,0,0,0.22); border: 1px dashed rgba(212,175,55,0.28); border-radius: 8px; padding: 8px; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; }
+        .tokenStorage.dragover { background: rgba(212,175,55,0.1); border-color: #d4af37; box-shadow: inset 0 0 12px rgba(212,175,55,0.08); }
+        /* Hand */
+        #hand { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; min-height: 58px; }
         .handTile {
-            width: 50px; height: 50px;
-            border: 1px solid rgba(212,175,55,0.45);
-            border-radius: 7px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-weight: 700; font-size: 20px; color: white;
-            transition: transform 0.15s, box-shadow 0.15s;
+            width: 50px; height: 50px; border: 1px solid rgba(212,175,55,0.45); border-radius: 7px;
+            display: flex; align-items: center; justify-content: center; cursor: grab;
+            font-weight: 700; font-size: 20px; color: white; transition: transform 0.15s, box-shadow 0.15s;
             box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
         }
-        .handTile.blue {
-            background: linear-gradient(145deg, #162c5e, #244880, #162c5e);
-        }
-        .handTile.red {
-            background: linear-gradient(145deg, #500e0e, #7e2020, #500e0e);
-        }
-        .handTile.dolos {
-            background: radial-gradient(circle at 35% 32%, #606060, #181818) !important;
-        }
-        .handTile:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.65), 0 0 8px rgba(212,175,55,0.15);
-        }
-        .handTile.selected {
-            border-color: #ffee00;
-            box-shadow: 0 0 22px rgba(255,238,0,0.55), 0 4px 14px rgba(0,0,0,0.6);
-        }
-
-        /* ── Board Area ── */
-        #boardWrapper {
-            display: flex; flex-direction: column; align-items: center;
-        }
+        .handTile:active { cursor: grabbing; }
+        .handTile.blue  { background: linear-gradient(145deg, #162c5e, #244880, #162c5e); }
+        .handTile.red   { background: linear-gradient(145deg, #500e0e, #7e2020, #500e0e); }
+        .handTile.dolos { background: radial-gradient(circle at 35% 32%, #606060, #181818) !important; }
+        .handTile:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.65), 0 0 8px rgba(212,175,55,0.15); }
+        .handTile.dragging { opacity: 0.4; }
+        /* Board */
+        #boardWrapper { display: flex; flex-direction: column; align-items: center; }
         #boardContainer { position: relative; }
-
-        /* Decorative corners */
-        .board-corner {
-            position: absolute;
-            color: rgba(212,175,55,0.55);
-            font-size: 22px;
-            z-index: 10;
-            pointer-events: none;
-            line-height: 1;
-            text-shadow: 0 0 8px rgba(212,175,55,0.3);
-        }
-        .board-corner.tl { top: 8px;  left: 8px; }
-        .board-corner.tr { top: 8px;  right: 8px; transform: scaleX(-1); }
-        .board-corner.bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
-        .board-corner.br { bottom: 8px; right: 8px; transform: scale(-1); }
-
+        .board-corner { position: absolute; color: rgba(212,175,55,0.55); font-size: 22px; z-index: 10; pointer-events: none; line-height: 1; text-shadow: 0 0 8px rgba(212,175,55,0.3); }
+        .board-corner.tl { top: 8px; left: 8px; } .board-corner.tr { top: 8px; right: 8px; transform: scaleX(-1); }
+        .board-corner.bl { bottom: 8px; left: 8px; transform: scaleY(-1); } .board-corner.br { bottom: 8px; right: 8px; transform: scale(-1); }
         #boardBorder {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 18px;
-            background:
-                radial-gradient(ellipse at 50%   0%, rgba(212,175,55,0.14) 0%, transparent 55%),
-                radial-gradient(ellipse at 50% 100%, rgba(212,175,55,0.14) 0%, transparent 55%),
-                radial-gradient(ellipse at   0% 50%, rgba(212,175,55,0.14) 0%, transparent 55%),
-                radial-gradient(ellipse at 100% 50%, rgba(212,175,55,0.14) 0%, transparent 55%),
-                linear-gradient(140deg, #3c2408 0%, #543010 30%, #2c1604 55%, #543010 80%, #3c2408 100%);
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 18px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.14) 0%, transparent 55%), radial-gradient(ellipse at 50% 100%, rgba(212,175,55,0.14) 0%, transparent 55%), radial-gradient(ellipse at 0% 50%, rgba(212,175,55,0.14) 0%, transparent 55%), radial-gradient(ellipse at 100% 50%, rgba(212,175,55,0.14) 0%, transparent 55%), linear-gradient(140deg, #3c2408 0%, #543010 30%, #2c1604 55%, #543010 80%, #3c2408 100%);
             border: 2px solid rgba(212,175,55,0.38);
-            box-shadow:
-                0 0 0 1px rgba(60,32,4,0.9),
-                inset 0 0 0 2px rgba(212,175,55,0.12),
-                inset 0 0 0 4px rgba(0,0,0,0.25),
-                0 10px 40px rgba(0,0,0,0.75);
-            pointer-events: none;
-            z-index: 0;
+            box-shadow: 0 0 0 1px rgba(60,32,4,0.9), inset 0 0 0 2px rgba(212,175,55,0.12), inset 0 0 0 4px rgba(0,0,0,0.25), 0 10px 40px rgba(0,0,0,0.75);
+            pointer-events: none; z-index: 0;
         }
-
-        #board {
-            display: grid;
-            grid-template-columns: repeat(6, 60px);
-            grid-template-rows: repeat(6, 60px);
-            gap: 2px;
-            background: linear-gradient(135deg, #4a3010, #6a4820, #4a3010);
-            padding: 10px;
-            border-radius: 10px;
-            margin: 80px;
-            position: relative; z-index: 1;
-            box-shadow:
-                0 0 0 1px rgba(0,0,0,0.6),
-                0 6px 24px rgba(0,0,0,0.7),
-                inset 0 1px 0 rgba(255,255,255,0.04);
-        }
-
-        /* ── Spaces ── */
-        .space {
-            width: 60px; height: 60px;
-            border: 1px solid rgba(0,0,0,0.45);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative;
-            transition: filter 0.15s, border-color 0.15s;
-        }
-        .space.blue {
-            background:
-                linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 50%),
-                linear-gradient(135deg, #1a3468, #284e8c);
-            box-shadow: inset 0 1px 0 rgba(80,130,255,0.12);
-        }
-        .space.red {
-            background:
-                linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 50%),
-                linear-gradient(135deg, #681414, #8e2222);
-            box-shadow: inset 0 1px 0 rgba(255,80,80,0.12);
-        }
+        #board { display: grid; grid-template-columns: repeat(6, 60px); grid-template-rows: repeat(6, 60px); gap: 2px; background: linear-gradient(135deg, #4a3010, #6a4820, #4a3010); padding: 10px; border-radius: 10px; margin: 80px; position: relative; z-index: 1; box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 6px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04); }
+        .space { width: 60px; height: 60px; border: 1px solid rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: filter 0.15s, border-color 0.15s; }
+        .space.blue { background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 50%), linear-gradient(135deg, #1a3468, #284e8c); box-shadow: inset 0 1px 0 rgba(80,130,255,0.12); }
+        .space.red  { background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 50%), linear-gradient(135deg, #681414, #8e2222); box-shadow: inset 0 1px 0 rgba(255,80,80,0.12); }
         .space:hover { filter: brightness(1.25); border-color: rgba(212,175,55,0.65); }
-        .space.highlighted {
-            border: 2px solid #ffee00 !important;
-            box-shadow: 0 0 14px rgba(255,238,0,0.5), inset 0 0 10px rgba(255,238,0,0.12);
-            filter: brightness(1.2);
-        }
-
-        /* ── Tiles ── */
-        .tile {
-            width: 52px; height: 52px;
-            border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 22px; color: white;
-            cursor: pointer; position: relative;
-            transition: filter 0.15s, transform 0.1s;
-        }
-        .tile.blue {
-            background: linear-gradient(145deg, #2a4e92, #162e66, #2a4e92);
-            border: 1px solid rgba(80,140,255,0.28);
-            box-shadow:
-                0 4px 10px rgba(0,0,0,0.65),
-                inset 0 1px 0 rgba(140,190,255,0.22),
-                inset 0 -1px 0 rgba(0,0,0,0.3);
-        }
-        .tile.red {
-            background: linear-gradient(145deg, #8c2020, #521010, #8c2020);
-            border: 1px solid rgba(255,80,80,0.28);
-            box-shadow:
-                0 4px 10px rgba(0,0,0,0.65),
-                inset 0 1px 0 rgba(255,140,140,0.22),
-                inset 0 -1px 0 rgba(0,0,0,0.3);
-        }
-        .tile.dolos {
-            background: radial-gradient(circle at 35% 30%, #606060, #181818);
-            border: 1px solid rgba(160,160,160,0.25);
-            box-shadow:
-                0 4px 10px rgba(0,0,0,0.65),
-                inset 0 1px 0 rgba(220,220,220,0.12);
-        }
-        .tile.facedown {
-            background: linear-gradient(145deg, #282828, #141414);
-            border: 1px solid rgba(70,70,70,0.4);
-            color: transparent;
-        }
+        .space.drop-ok { border: 2px solid #88ff88 !important; box-shadow: 0 0 14px rgba(136,255,136,0.5), inset 0 0 10px rgba(136,255,136,0.15); }
+        .tile { width: 52px; height: 52px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px; color: white; cursor: grab; position: relative; transition: filter 0.15s, transform 0.1s; }
+        .tile:active { cursor: grabbing; }
+        .tile.dragging { opacity: 0.4; }
+        .tile.blue  { background: linear-gradient(145deg, #2a4e92, #162e66, #2a4e92); border: 1px solid rgba(80,140,255,0.28); box-shadow: 0 4px 10px rgba(0,0,0,0.65), inset 0 1px 0 rgba(140,190,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.3); }
+        .tile.red   { background: linear-gradient(145deg, #8c2020, #521010, #8c2020); border: 1px solid rgba(255,80,80,0.28); box-shadow: 0 4px 10px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,140,140,0.22), inset 0 -1px 0 rgba(0,0,0,0.3); }
+        .tile.dolos { background: radial-gradient(circle at 35% 30%, #606060, #181818); border: 1px solid rgba(160,160,160,0.25); box-shadow: 0 4px 10px rgba(0,0,0,0.65), inset 0 1px 0 rgba(220,220,220,0.12); }
+        .tile.facedown { background: linear-gradient(145deg, #282828, #141414); border: 1px solid rgba(70,70,70,0.4); color: transparent; }
         .tile:hover { filter: brightness(1.18); transform: translateY(-1px); }
-
-        .tile-mark {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 38px;
-            color: rgba(255,30,30,0.92);
-            font-weight: 900;
-            text-shadow: 0 0 10px rgba(255,0,0,0.55), 1px 2px 4px rgba(0,0,0,0.85);
-            pointer-events: none;
-        }
-
-        /* ── Success Tokens ── */
-        .tokenSlot {
-            position: absolute;
-            width: 44px; height: 44px;
-            border: 1px dashed rgba(212,175,55,0.28);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: all;
-            z-index: 2;
-        }
+        .tile-mark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 38px; color: rgba(255,30,30,0.92); font-weight: 900; text-shadow: 0 0 10px rgba(255,0,0,0.55), 1px 2px 4px rgba(0,0,0,0.85); pointer-events: none; }
+        /* Tokens */
+        .tokenSlot { position: absolute; width: 44px; height: 44px; border: 1px dashed rgba(212,175,55,0.28); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: all; z-index: 2; }
         .tokenSlot.occupied { border-color: transparent; }
-        .tokenSlot.dragover {
-            background: rgba(212,175,55,0.18);
-            border-color: #d4af37;
-            box-shadow: 0 0 14px rgba(212,175,55,0.5);
-        }
-
-        .successToken {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: 700;
-            font-family: 'Cinzel', serif;
-            cursor: grab;
-            position: absolute;
-            transform: translate(-50%, -50%);
-            z-index: 3;
-            border: 2px solid rgba(0,0,0,0.45);
-            transition: box-shadow 0.15s, filter 0.15s;
-        }
-        .successToken:hover {
-            z-index: 4;
-            filter: brightness(1.15);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.75), 0 0 10px rgba(212,175,55,0.35) !important;
-        }
+        .tokenSlot.dragover { background: rgba(212,175,55,0.18); border-color: #d4af37; box-shadow: 0 0 14px rgba(212,175,55,0.5); }
+        .successToken { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-family: 'Cinzel', serif; cursor: grab; position: absolute; transform: translate(-50%, -50%); z-index: 3; border: 2px solid rgba(0,0,0,0.45); transition: box-shadow 0.15s, filter 0.15s; }
+        .successToken:hover { z-index: 4; filter: brightness(1.15); box-shadow: 0 6px 18px rgba(0,0,0,0.75), 0 0 10px rgba(212,175,55,0.35) !important; }
         .successToken:active { cursor: grabbing; }
         .successToken.dragging { opacity: 0.4; }
-
-        /* Coin-style tokens with radial highlight */
-        .successToken.zeus {
-            background: radial-gradient(circle at 35% 30%, #a0a0a0, #484848);
-            border-color: #282828;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25);
-            color: #fff;
-        }
-        .successToken.apollo {
-            background: radial-gradient(circle at 35% 30%, #ffc868, #b87028);
-            border-color: #784018;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
-            color: #fff;
-        }
-        .successToken.athena {
-            background: radial-gradient(circle at 35% 30%, #e0c8e0, #9878a0);
-            border-color: #584060;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
-            color: #2a0830;
-        }
-        .successToken.poseidon {
-            background: radial-gradient(circle at 35% 30%, #5898d8, #1e5090);
-            border-color: #082858;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25);
-            color: #fff;
-        }
-        .successToken.aphrodite {
-            background: radial-gradient(circle at 35% 30%, #ff9ab8, #cc4070);
-            border-color: #880038;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25);
-            color: #fff;
-        }
-        .successToken.positive {
-            background: radial-gradient(circle at 35% 30%, #ffe058, #c88c08);
-            border-color: #785800;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.4);
-            color: #3a1e00;
-        }
-        .successToken.negative {
-            background: radial-gradient(circle at 35% 30%, #c02828, #680808);
-            border-color: #380000;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,100,100,0.2);
-            color: #ffcccc;
-        }
-        .successToken.marriage {
-            background: radial-gradient(circle at 35% 30%, #88e888, #389838);
-            border-color: #185818;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
-            color: #083008;
-        }
-        .tokenStorage .successToken {
-            position: relative;
-            transform: none;
-        }
-
-        /* ── Message & Reference ── */
-        #message {
-            text-align: center;
-            padding: 10px 16px;
-            background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.03));
-            border: 1px solid rgba(212,175,55,0.14);
-            border-radius: 6px;
-            margin-top: 12px;
-            min-height: 40px;
-            width: 100%;
-            font-size: 0.8em;
-            letter-spacing: 0.04em;
-            color: #d8c090;
-        }
-
-        #tileReference {
-            background: linear-gradient(150deg, rgba(28,10,3,0.92), rgba(16,6,2,0.92));
-            border: 1px solid rgba(212,175,55,0.13);
-            padding: 12px 14px;
-            border-radius: 8px;
-            margin-top: 12px;
-            font-size: 11.5px;
-            width: 100%;
-            color: #b8a070;
-        }
-        #tileReference h4 {
-            color: #d4af37;
-            letter-spacing: 0.1em;
-            margin-bottom: 8px;
-            font-size: 0.82em;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(212,175,55,0.14);
-        }
-        #tileReference div { margin-bottom: 4px; }
-        #tileReference strong { color: #d4af37; }
-
-        #debugInfo {
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            margin-top: 10px;
-            border-radius: 5px;
-            font-size: 10.5px;
-            color: #705838;
-            font-family: monospace;
-            letter-spacing: 0;
-        }
+        .successToken.zeus      { background: radial-gradient(circle at 35% 30%, #a0a0a0, #484848); border-color:#282828; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25); color:#fff; }
+        .successToken.apollo    { background: radial-gradient(circle at 35% 30%, #ffc868, #b87028); border-color:#784018; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3); color:#fff; }
+        .successToken.athena    { background: radial-gradient(circle at 35% 30%, #e0c8e0, #9878a0); border-color:#584060; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3); color:#2a0830; }
+        .successToken.poseidon  { background: radial-gradient(circle at 35% 30%, #5898d8, #1e5090); border-color:#082858; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25); color:#fff; }
+        .successToken.aphrodite { background: radial-gradient(circle at 35% 30%, #ff9ab8, #cc4070); border-color:#880038; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25); color:#fff; }
+        .successToken.positive  { background: radial-gradient(circle at 35% 30%, #ffe058, #c88c08); border-color:#785800; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.4); color:#3a1e00; }
+        .successToken.negative  { background: radial-gradient(circle at 35% 30%, #c02828, #680808); border-color:#380000; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,100,100,0.2); color:#ffcccc; }
+        .successToken.marriage  { background: radial-gradient(circle at 35% 30%, #88e888, #389838); border-color:#185818; box-shadow:0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3); color:#083008; }
+        .tokenStorage .successToken, #tokenDisplay .successToken { position: relative; transform: none; }
+        /* Display row */
+        #tokenDisplay { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; padding: 8px 12px; background: rgba(0,0,0,0.25); border: 1px dashed rgba(212,175,55,0.25); border-radius: 8px; min-height: 56px; align-items: center; }
+        #tokenDisplay.dragover { background: rgba(212,175,55,0.1); border-color: #d4af37; }
+        .displayLabel { width: 100%; text-align: center; font-size: 0.65em; letter-spacing: 0.12em; color: rgba(212,175,55,0.5); margin-bottom: 4px; }
+        /* Message & Reference */
+        #message { text-align: center; padding: 10px 16px; background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.03)); border: 1px solid rgba(212,175,55,0.14); border-radius: 6px; margin-top: 12px; min-height: 40px; width: 100%; font-size: 0.8em; letter-spacing: 0.04em; color: #d8c090; }
+        #tileReference { background: linear-gradient(150deg, rgba(28,10,3,0.92), rgba(16,6,2,0.92)); border: 1px solid rgba(212,175,55,0.13); padding: 12px 14px; border-radius: 8px; margin-top: 12px; font-size: 11.5px; width: 100%; color: #b8a070; }
+        #tileReference h4 { color: #d4af37; letter-spacing: 0.1em; margin-bottom: 8px; font-size: 0.82em; padding-bottom: 6px; border-bottom: 1px solid rgba(212,175,55,0.14); }
+        #tileReference div { margin-bottom: 4px; } #tileReference strong { color: #d4af37; }
+        #debugInfo { background: rgba(0,0,0,0.3); padding: 8px; margin-top: 10px; border-radius: 5px; font-size: 10.5px; color: #705838; font-family: monospace; letter-spacing: 0; }
     </style>
 </head>
 <body>
 <div id="gameContainer">
 
-    <!-- Connection Panel -->
     <div id="connectionPanel">
         <h1>ILIAD</h1>
         <div class="subtitle">⚔ &nbsp; The Legend of Troy &nbsp; ⚔</div>
@@ -487,482 +135,340 @@
         <div class="connection-info">
             <h3>YOUR SESSION ID</h3>
             <p>Your ID: <strong id="myId">Generating...</strong></p>
-            <button id="copyId">Copy My ID</button>
-            <br><br>
+            <button id="copyId">Copy My ID</button><br><br>
             <input type="text" id="peerId" placeholder="Enter opponent's ID">
-            <button id="connectBtn">Connect</button>
-            <br><br>
+            <button id="connectBtn">Connect</button><br><br>
             <p id="status" style="color:rgba(212,175,55,0.5);font-size:0.8em;letter-spacing:0.1em">Waiting for connection...</p>
         </div>
     </div>
 
-    <!-- Game Board -->
     <div id="gameBoard">
-
-        <!-- My Panel -->
         <div class="playerPanel">
             <h3 id="playerRole"></h3>
-            <div id="modeLabel">Free Play Mode</div>
-            <div style="margin-top:12px;font-size:0.75em;letter-spacing:0.08em;color:rgba(212,175,55,0.6)">Token Storage</div>
+            <div id="modeLabel">Free Play · Drag Anything</div>
+            <div class="panelLabel">Token Storage</div>
             <div id="myTokenStorage" class="tokenStorage"></div>
-            <div style="margin-top:12px;font-size:0.75em;letter-spacing:0.08em;color:rgba(212,175,55,0.6)">Hand &nbsp;<span id="handCount" style="color:#808060"></span></div>
+            <div class="panelLabel">Hand <span id="handCount" style="color:#808060"></span></div>
             <div id="hand"></div>
             <button id="drawTile"      style="margin-top:12px;width:100%;padding:8px">Draw Tile</button>
             <button id="checkLinesBtn" style="margin-top:6px; width:100%;padding:8px">Check Scoring Lines</button>
-            <button id="syncBtn"       style="margin-top:6px; width:100%;padding:8px;background:linear-gradient(150deg,#446,#668);">⟳ Sync State</button>
+            <button id="syncBtn"       style="margin-top:6px; width:100%;padding:8px;background:linear-gradient(150deg,#446,#668)">⟳ Sync Board</button>
             <div id="debugInfo"></div>
         </div>
 
-        <!-- Board -->
         <div id="boardWrapper">
             <div id="boardContainer">
                 <div id="boardBorder"></div>
-                <span class="board-corner tl">✦</span>
-                <span class="board-corner tr">✦</span>
-                <span class="board-corner bl">✦</span>
-                <span class="board-corner br">✦</span>
+                <span class="board-corner tl">✦</span><span class="board-corner tr">✦</span>
+                <span class="board-corner bl">✦</span><span class="board-corner br">✦</span>
                 <div id="board"></div>
             </div>
+            <div id="tokenDisplay"><div class="displayLabel">DISPLAY TOKENS — swappable (Value 3 effect)</div></div>
             <div id="message"></div>
             <div id="tileReference">
-                <h4>Tile Effects Reference</h4>
+                <h4>Tile Effects Reference (perform manually)</h4>
                 <div><strong>1 —</strong> Reposition one of the opponent's accessible tiles</div>
                 <div><strong>2 —</strong> Reposition one of your own accessible tiles</div>
-                <div><strong>3 —</strong> Swap one of your success tokens with a displayed token</div>
-                <div><strong>4 —</strong> Mark tiles face-down (right-click to add/remove X)</div>
-                <div><strong>5 —</strong> No effect</div>
-                <div><strong>✦ Dolos —</strong> No effect; value = sum of both neighbours in scoring line</div>
+                <div><strong>3 —</strong> Swap one of your success tokens with a display token</div>
+                <div><strong>4 —</strong> Turn this tile + a neighbour face-down (right-click to mark X)</div>
+                <div><strong>5 / ✦ Dolos —</strong> No effect</div>
             </div>
         </div>
 
-        <!-- Opponent Panel -->
         <div class="playerPanel">
             <h3>Opponent</h3>
-            <div style="font-size:0.75em;letter-spacing:0.08em;color:rgba(212,175,55,0.6)">Token Storage</div>
+            <div class="panelLabel">Token Storage</div>
             <div id="oppTokenStorage" class="tokenStorage"></div>
         </div>
-
     </div>
 </div>
 
 <script>
     // ── Constants ──────────────────────────────────────────────────────────────
     const GODS        = ['Zeus', 'Apollo', 'Athena', 'Poseidon', 'Aphrodite'];
-    const TILE_VALUES = [1,1,1, 2,2,2, 3,3,3, 4,4,4, 5,5,5, 'D','D','D'];
-    const BOARD_PX    = 380;
-    const BORDER_PX   = 80;
+    const TILE_VALUES = [1,1,1, 2,2,2, 3,3,3, 4,4,4, 5,5,5, 'D','D','D']; // 18 per player
+    const BOARD_PX    = 380, BORDER_PX = 80;
 
-    // ── Peer / connection state ────────────────────────────────────────────────
+    // ── Connection ──────────────────────────────────────────────────────────────
     let peer, conn, myId, isHost, myColor;
 
-    // ── Game state ─────────────────────────────────────────────────────────────
-    let gs = {
-        board:          Array(36).fill(null),
-        successTokens:  [],
-        tokenPositions: {},
-        tokenSlots:     [],
-        reserveIds:     [],
-        blueDeck: [], redDeck: [],
-        blueHand: [], redHand: [],
-    };
+    // ── Shared, synced state (board + tokens only — never hands) ────────────────
+    let gs = { board: Array(36).fill(null), successTokens: [], tokenPositions: {}, tokenSlots: [] };
 
-    // ── Local UI state ─────────────────────────────────────────────────────────
-    let selHandIdx   = null;
-    let selBoardIdx  = null;
-    let effectMode   = null;
-    let effectTile   = null;
-    let markedTiles  = new Set();
-    let dragToken    = null;
+    // ── Private, local state ────────────────────────────────────────────────────
+    let myDeck = [], myHand = [];
+    let markedTiles = new Set();
+    let localReady = false;
 
-    // ── PeerJS ────────────────────────────────────────────────────────────────
-    peer = new Peer(undefined, {
-        config: {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-            ]
-        }
-    });
+    // ── Drag state (unified): { kind:'hand'|'board'|'token', index?, id? } ──────
+    let drag = null;
 
-    peer.on('open', id => {
-        myId = id;
-        document.getElementById('myId').textContent = id;
-        document.getElementById('status').textContent = 'Ready — share your ID or enter opponent\'s ID';
-    });
-
-    peer.on('error', err => {
-        console.error('PeerJS error:', err);
-        document.getElementById('status').textContent = `Connection error: ${err.type}`;
-    });
-
-    peer.on('connection', c => {
-        conn = c;
-        isHost = true;
-        myColor = 'blue';
-        conn.on('open', () => {
-            setupConn();
-            initGame();
-        });
-    });
+    // ── PeerJS ──────────────────────────────────────────────────────────────────
+    peer = new Peer(undefined, { config: { iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }
+    ] } });
+    peer.on('open', id => { myId = id; document.getElementById('myId').textContent = id; document.getElementById('status').textContent = 'Ready — share your ID or enter opponent\'s'; });
+    peer.on('error', err => { document.getElementById('status').textContent = `Error: ${err.type}`; });
+    peer.on('connection', c => { conn = c; isHost = true; myColor = 'blue'; c.on('open', () => { setupConn(); initGame(); }); });
 
     document.getElementById('copyId').addEventListener('click', () => {
         navigator.clipboard.writeText(myId);
-        const s = document.getElementById('status');
-        s.textContent = 'ID copied!';
+        const s = document.getElementById('status'); s.textContent = 'ID copied!';
         setTimeout(() => s.textContent = 'Waiting for connection...', 2000);
     });
-
     document.getElementById('connectBtn').addEventListener('click', () => {
         const id = document.getElementById('peerId').value.trim();
         if (!id || id === myId) return;
         document.getElementById('status').textContent = 'Connecting...';
         conn = peer.connect(id, { reliable: true });
         isHost = false; myColor = 'red';
-        conn.on('open', () => {
-            document.getElementById('status').textContent = 'Connected! Waiting for host...';
-            setupConn();
-        });
-        conn.on('error', err => {
-            document.getElementById('status').textContent = `Failed to connect: ${err}`;
-        });
+        conn.on('open', () => { document.getElementById('status').textContent = 'Connected!'; setupConn(); });
+        conn.on('error', err => { document.getElementById('status').textContent = `Failed: ${err}`; });
     });
 
-    // ── Connection setup ──────────────────────────────────────────────────────
     function setupConn() {
         document.getElementById('connectionPanel').style.display = 'none';
         document.getElementById('gameBoard').style.display = 'grid';
-
         conn.on('data', data => {
-            if (data.type === 'gameState') { gs = data.state; render(); showMsg('Game state synced'); }
-            else if (data.type === 'move') applyOpponentMove(data);
+            if (data.type === 'gameState') {
+                gs = data.state;
+                if (!localReady) { initLocalDeck(); localReady = true; }
+                render(); showMsg('Board synced');
+            } else if (data.type === 'move') applyOpponentMove(data);
         });
         conn.on('close', () => showMsg('Opponent disconnected'));
-        conn.on('error', err => showMsg(`Connection error: ${err}`));
-
         if (isHost) setTimeout(sendState, 500);
     }
 
-    // ── Game init ─────────────────────────────────────────────────────────────
+    // ── Init ──────────────────────────────────────────────────────────────────
     function initGame() {
         for (let i = 0; i < 36; i++) {
             const r = Math.floor(i / 6), c = i % 6;
             gs.board[i] = { color: (r % 2 === 0 ? c % 2 === 0 : c % 2 === 1) ? 'blue' : 'red', tile: null };
         }
-        gs.blueDeck = shuffle([...TILE_VALUES]);
-        gs.redDeck  = shuffle([...TILE_VALUES]);
-        for (let i = 0; i < 2; i++) {
-            gs.blueHand.push(gs.blueDeck.pop());
-            gs.redHand.push(gs.redDeck.pop());
-        }
         setupTokens();
-        render();
-        sendState();
+        initLocalDeck(); localReady = true;
+        render(); sendState();
     }
 
-    // ── Token setup ───────────────────────────────────────────────────────────
+    function initLocalDeck() {
+        myDeck = shuffle([...TILE_VALUES]);
+        myHand = [ myDeck.pop(), myDeck.pop() ];
+    }
+
+    // ── Token setup — faithful to the rulebook (29 tokens) ──────────────────────
     function setupTokens() {
-        const all = [];
-        GODS.forEach(god =>
-            all.push({ type:'god', god, value: Math.floor(Math.random()*10)+1, id:`tk-${god}` })
-        );
-        ['Shield','Spear','Chariot','Helm','Sword','Bow','Armor','Horse','Glory','Favor','Victory']
-            .forEach((item,i) => all.push({ type:'positive', item, value:10, id:`tk-pos${i}` }));
-        [{item:'Weakened',value:-3},{item:'Morale',value:-3},{item:'Plague',value:-5},
-         {item:'Discord',value:-5},{item:'Exhaustion',value:-5},{item:'Famine',value:-10},
-         {item:'Firestorm',value:-10},{item:'Curse',value:-10},{item:'Betrayal',value:-5},
-         {item:'Storm',value:-5},{item:'Defeat',value:-10}]
-            .forEach((n,i) => all.push({ type:'negative', item:n.item, value:n.value, id:`tk-neg${i}` }));
-        all.push({ type:'marriage', value:0, id:'tk-m1' });
-        all.push({ type:'marriage', value:0, id:'tk-m2' });
+        const all = []; let idc = 0;
+        const add = o => { o.id = `tk${idc++}`; all.push(o); };
+
+        // 5 gods × 3 copies each, varied values 1–10  (15)
+        GODS.forEach(god => { for (let k = 0; k < 3; k++) add({ type:'god', god, value: 1 + Math.floor(Math.random() * 10) }); });
+        // Positive +10 — Achilles' Shield, Hector's Spear, Chariot × 2 each  (6)
+        ["Achilles' Shield", "Hector's Spear", "Chariot"].forEach(item => { for (let k = 0; k < 2; k++) add({ type:'positive', item, value: 10 }); });
+        // Negative — Weakened Morale −3, Plague −5, Firestorm −10 × 2 each  (6)
+        [{item:'Weakened Morale',value:-3},{item:'Plague',value:-5},{item:'Firestorm',value:-10}]
+            .forEach(n => { for (let k = 0; k < 2; k++) add({ type:'negative', item:n.item, value:n.value }); });
+        // 2 marriage tokens  (2)   → total 29
+        add({ type:'marriage', value:0 }); add({ type:'marriage', value:0 });
 
         const pool = shuffle(all);
-        const board24 = [];
-        const rest    = [...pool];
-        for (let i = 0; i < rest.length && board24.length < 5; i++) {
-            if (rest[i].value >= 0) { board24.push(...rest.splice(i,1)); i--; }
+
+        // Pull 5 non-negative tokens for the swappable display
+        const display = [], rest = [...pool];
+        for (let i = 0; i < rest.length && display.length < 5; i++) {
+            if (rest[i].value >= 0) { display.push(...rest.splice(i, 1)); i--; }
         }
-        const restShuf = shuffle(rest);
-        board24.push(...restShuf.slice(0,19));
-        const reserve = restShuf.slice(19);
+        const border = shuffle(rest); // remaining 24 surround the board
 
-        gs.successTokens = shuffle([...board24, ...reserve]);
-        gs.reserveIds    = reserve.map(t => t.id);
-
+        // Build 24 border slots (6 per side)
         gs.tokenSlots = [];
-        const sp   = BOARD_PX / 6;
-        const half = sp / 2;
-        const mid  = BORDER_PX / 2;
-
+        const sp = BOARD_PX / 6, half = sp / 2, mid = BORDER_PX / 2;
         for (let i = 0; i < 24; i++) {
             let x, y;
-            if      (i < 6)  { x = BORDER_PX + half + i       * sp; y = mid; }
-            else if (i < 12) { x = BORDER_PX + BOARD_PX + mid;       y = BORDER_PX + half + (i-6)  * sp; }
+            if      (i < 6)  { x = BORDER_PX + half + i * sp;                 y = mid; }
+            else if (i < 12) { x = BORDER_PX + BOARD_PX + mid;               y = BORDER_PX + half + (i-6) * sp; }
             else if (i < 18) { x = BORDER_PX + BOARD_PX - half - (i-12) * sp; y = BORDER_PX + BOARD_PX + mid; }
-            else             { x = mid;                               y = BORDER_PX + BOARD_PX - half - (i-18) * sp; }
+            else             { x = mid;                                       y = BORDER_PX + BOARD_PX - half - (i-18) * sp; }
             gs.tokenSlots.push({ x, y, occupied: null, index: i });
         }
 
-        shuffle(board24).forEach((token, i) => {
-            const slot = gs.tokenSlots[i];
-            slot.occupied = token.id;
-            gs.tokenPositions[token.id] = { x: slot.x, y: slot.y, location: 'board' };
-        });
-        reserve.forEach(t => { gs.tokenPositions[t.id] = { location: 'reserve' }; });
+        gs.successTokens = [...border, ...display];
+        border.forEach((t, i) => { const s = gs.tokenSlots[i]; s.occupied = t.id; gs.tokenPositions[t.id] = { x: s.x, y: s.y, location: 'board' }; });
+        display.forEach(t => { gs.tokenPositions[t.id] = { location: 'display' }; });
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // ── Render ──────────────────────────────────────────────────────────────────
     function render() {
-        document.getElementById('playerRole').textContent =
-            myColor === 'blue' ? '🛡 Hector (Blue)' : '⚔ Achilles (Red)';
-
-        const myHand = hand(), myDeck = deck();
+        document.getElementById('playerRole').textContent = myColor === 'blue' ? '🛡 Hector (Blue)' : '⚔ Achilles (Red)';
         document.getElementById('handCount').textContent = `(${myHand.length})`;
-        document.getElementById('debugInfo').innerHTML =
-            `Deck: ${myDeck.length} / 18 &nbsp;|&nbsp; Hand: [${myHand.join(', ')}]`;
+        document.getElementById('debugInfo').innerHTML = `Deck: ${myDeck.length}/18 &nbsp;|&nbsp; Hand: [${myHand.join(', ')}]`;
 
-        const handEl = document.getElementById('hand');
-        handEl.innerHTML = '';
+        // Hand (draggable)
+        const handEl = document.getElementById('hand'); handEl.innerHTML = '';
         myHand.forEach((v, i) => {
             const d = document.createElement('div');
             d.className = `handTile ${myColor}${v === 'D' ? ' dolos' : ''}`;
             d.textContent = v === 'D' ? '✦' : v;
-            if (selHandIdx === i) d.classList.add('selected');
-            d.addEventListener('click', () => selectHandTile(i));
+            d.draggable = true;
+            d.addEventListener('dragstart', e => { drag = { kind:'hand', index:i }; d.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+            d.addEventListener('dragend',   () => { d.classList.remove('dragging'); drag = null; });
             handEl.appendChild(d);
         });
 
-        const boardEl = document.getElementById('board');
-        boardEl.innerHTML = '';
+        // Board spaces (drop targets + tiles draggable)
+        const boardEl = document.getElementById('board'); boardEl.innerHTML = '';
         gs.board.forEach((space, i) => {
             const sp = document.createElement('div');
             sp.className = `space ${space.color}`;
-            if (selBoardIdx === i) sp.classList.add('highlighted');
 
             if (space.tile) {
                 const t = document.createElement('div');
                 t.className = `tile ${space.tile.color}`;
-                if      (space.tile.facedown)        t.classList.add('facedown');
-                else if (space.tile.value === 'D') { t.classList.add('dolos'); t.textContent = '✦'; }
-                else                                 t.textContent = space.tile.value;
-
-                if (markedTiles.has(i)) {
-                    const m = document.createElement('div');
-                    m.className = 'tile-mark'; m.textContent = '✕';
-                    t.appendChild(m);
-                }
+                if      (space.tile.facedown)      t.classList.add('facedown');
+                else if (space.tile.value === 'D'){ t.classList.add('dolos'); t.textContent = '✦'; }
+                else                                t.textContent = space.tile.value;
+                if (markedTiles.has(i)) { const m = document.createElement('div'); m.className = 'tile-mark'; m.textContent = '✕'; t.appendChild(m); }
+                t.draggable = true;
+                t.addEventListener('dragstart', e => { e.stopPropagation(); drag = { kind:'board', index:i }; t.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+                t.addEventListener('dragend',   () => { t.classList.remove('dragging'); drag = null; });
                 sp.appendChild(t);
             }
 
-            sp.addEventListener('click',       () => handleSpaceClick(i));
-            sp.addEventListener('contextmenu', e  => handleRightClick(e, i));
+            sp.addEventListener('dragover', e => { if (drag && drag.kind !== 'token') { e.preventDefault(); e.stopPropagation(); sp.classList.add('drop-ok'); } });
+            sp.addEventListener('dragleave', () => sp.classList.remove('drop-ok'));
+            sp.addEventListener('drop', e => { sp.classList.remove('drop-ok'); handleTileDrop(e, i); });
+            sp.addEventListener('contextmenu', e => handleRightClick(e, i));
             boardEl.appendChild(sp);
         });
 
+        renderTokens();
+    }
+
+    function renderTokens() {
         const container = document.getElementById('boardContainer');
         const myStore   = document.getElementById('myTokenStorage');
         const oppStore  = document.getElementById('oppTokenStorage');
+        const display   = document.getElementById('tokenDisplay');
 
         document.querySelectorAll('.successToken, .tokenSlot').forEach(el => el.remove());
         myStore.innerHTML = oppStore.innerHTML = '';
+        display.querySelectorAll('.successToken').forEach(el => el.remove());
 
+        // Slots
         gs.tokenSlots.forEach(slot => {
             const el = document.createElement('div');
             el.className = `tokenSlot${slot.occupied ? ' occupied' : ''}`;
-            el.style.left = slot.x + 'px';
-            el.style.top  = slot.y + 'px';
-            el.addEventListener('dragover',  e => { e.preventDefault(); e.stopPropagation(); el.classList.add('dragover'); });
+            el.style.left = slot.x + 'px'; el.style.top = slot.y + 'px';
+            el.addEventListener('dragover',  e => { if (drag?.kind === 'token') { e.preventDefault(); e.stopPropagation(); el.classList.add('dragover'); } });
             el.addEventListener('dragleave', () => el.classList.remove('dragover'));
-            el.addEventListener('drop',      e => { e.preventDefault(); e.stopPropagation(); el.classList.remove('dragover'); snapToSlot(slot.index); });
+            el.addEventListener('drop',      e => { if (drag?.kind === 'token') { e.preventDefault(); e.stopPropagation(); el.classList.remove('dragover'); snapToSlot(slot.index); } });
             container.appendChild(el);
         });
 
+        // Tokens
         gs.successTokens.forEach(token => {
-            const pos = gs.tokenPositions[token.id];
-            if (!pos || pos.location === 'reserve') return;
+            const pos = gs.tokenPositions[token.id]; if (!pos) return;
             const el = makeTokenEl(token);
-            if (pos.location === 'board') {
-                el.style.left = pos.x + 'px';
-                el.style.top  = pos.y + 'px';
-                container.appendChild(el);
-            } else if (pos.location === myColor) {
-                myStore.appendChild(el);
-            } else {
-                oppStore.appendChild(el);
-            }
+            if (pos.location === 'board')        { el.style.left = pos.x + 'px'; el.style.top = pos.y + 'px'; container.appendChild(el); }
+            else if (pos.location === 'display') { display.appendChild(el); }
+            else if (pos.location === myColor)   { myStore.appendChild(el); }
+            else                                 { oppStore.appendChild(el); }
         });
 
-        container.addEventListener('dragover', e => e.preventDefault());
-        container.addEventListener('drop',     handleFreeDrop);
+        // Container free-drop (tokens only)
+        container.ondragover = e => { if (drag?.kind === 'token') e.preventDefault(); };
+        container.ondrop     = handleTokenFreeDrop;
 
-        myStore.addEventListener('dragover',  e => { e.preventDefault(); myStore.classList.add('dragover'); });
-        myStore.addEventListener('dragleave', () => myStore.classList.remove('dragover'));
-        myStore.addEventListener('drop', e => {
-            e.preventDefault(); myStore.classList.remove('dragover');
-            if (!dragToken) return;
-            const id = dragToken.id;
-            clearSlot(id);
-            gs.tokenPositions[id] = { location: myColor };
-            render();
-            sendMove({ action:'moveToken', tokenId:id, position:gs.tokenPositions[id] });
-        });
+        // Storage + display drop zones
+        setupTokenDropZone(myStore, myColor);
+        setupTokenDropZone(display, 'display');
+    }
+
+    function setupTokenDropZone(el, location) {
+        el.ondragover  = e => { if (drag?.kind === 'token') { e.preventDefault(); el.classList.add('dragover'); } };
+        el.ondragleave = () => el.classList.remove('dragover');
+        el.ondrop      = e => {
+            if (drag?.kind !== 'token') return;
+            e.preventDefault(); e.stopPropagation(); el.classList.remove('dragover');
+            const id = drag.id; clearSlot(id);
+            gs.tokenPositions[id] = { location };
+            render(); sendMove({ action:'moveToken', tokenId:id, position: gs.tokenPositions[id] });
+        };
     }
 
     function makeTokenEl(token) {
         const el = document.createElement('div');
-        el.id = token.id;
-        el.className = 'successToken';
-        el.draggable = true;
-        if (token.type === 'god') {
-            el.classList.add(token.god.toLowerCase());
-            el.textContent = token.god[0] + token.value;
-            el.title = `${token.god}: ${token.value}`;
-        } else if (token.type === 'positive') {
-            el.classList.add('positive');
-            el.textContent = `+${token.value}`;
-            el.title = `${token.item}: +${token.value}`;
-        } else if (token.type === 'negative') {
-            el.classList.add('negative');
-            el.textContent = token.value;
-            el.title = `${token.item}: ${token.value}`;
-        } else {
-            el.classList.add('marriage');
-            el.textContent = '💍';
-            el.title = 'Marriage to Helen';
-        }
-        el.addEventListener('dragstart', e => { dragToken = el; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-        el.addEventListener('dragend',   () => { el.classList.remove('dragging'); dragToken = null; });
+        el.id = token.id; el.className = 'successToken'; el.draggable = true;
+        if (token.type === 'god')        { el.classList.add(token.god.toLowerCase()); el.textContent = token.god[0] + token.value; el.title = `${token.god}: ${token.value}`; }
+        else if (token.type === 'positive'){ el.classList.add('positive'); el.textContent = `+${token.value}`; el.title = `${token.item}: +${token.value}`; }
+        else if (token.type === 'negative'){ el.classList.add('negative'); el.textContent = token.value; el.title = `${token.item}: ${token.value}`; }
+        else                              { el.classList.add('marriage'); el.textContent = '💍'; el.title = 'Marriage to Helen'; }
+        el.addEventListener('dragstart', e => { drag = { kind:'token', id: token.id }; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+        el.addEventListener('dragend',   () => { el.classList.remove('dragging'); drag = null; });
         return el;
     }
 
-    // ── Token drag ────────────────────────────────────────────────────────────
-    function clearSlot(tokenId) {
-        gs.tokenSlots.forEach(s => { if (s.occupied === tokenId) s.occupied = null; });
-    }
-    function snapToSlot(slotIdx) {
-        if (!dragToken) return;
-        const id = dragToken.id, slot = gs.tokenSlots[slotIdx];
-        clearSlot(id);
-        slot.occupied = id;
-        gs.tokenPositions[id] = { x: slot.x, y: slot.y, location: 'board' };
-        render();
-        sendMove({ action:'moveToken', tokenId:id, position:gs.tokenPositions[id] });
-    }
-    function handleFreeDrop(e) {
-        e.preventDefault();
-        if (!dragToken || e.target.classList.contains('tokenSlot')) return;
-        const id   = dragToken.id;
-        const rect = document.getElementById('boardContainer').getBoundingClientRect();
-        clearSlot(id);
-        gs.tokenPositions[id] = { x: e.clientX - rect.left, y: e.clientY - rect.top, location: 'board' };
-        render();
-        sendMove({ action:'moveToken', tokenId:id, position:gs.tokenPositions[id] });
-    }
-
-    // ── Tile placement ────────────────────────────────────────────────────────
-    function selectHandTile(i) {
-        selHandIdx  = selHandIdx === i ? null : i;
-        selBoardIdx = null;
-        render();
-        if (selHandIdx !== null) showMsg(`Selected tile: ${hand()[selHandIdx]}`);
-    }
-
-    function handleSpaceClick(i) {
-        if (effectMode) { handleEffect(i); return; }
+    // ── Tile drag/drop ────────────────────────────────────────────────────────
+    function handleTileDrop(e, i) {
+        if (!drag || drag.kind === 'token') return;
+        e.preventDefault(); e.stopPropagation();
         const space = gs.board[i];
+        if (space.tile) { showMsg('Space already occupied'); return; }
 
-        if (space.tile && space.tile.color === myColor) {
-            if (selBoardIdx === i) { selBoardIdx = null; showMsg('Tile deselected'); }
-            else {
-                selBoardIdx = i; selHandIdx = null;
-                showMsg(`Picked up ${space.tile.value === 'D' ? '✦' : space.tile.value} — click empty space to move`);
-            }
-            render(); return;
-        }
-
-        if (selBoardIdx !== null && !space.tile) {
-            if (space.color !== myColor && !neighborExcept(i, selBoardIdx)) {
-                showMsg('Invalid position — must be your colour or adjacent to an existing tile'); return;
-            }
-            const tile = gs.board[selBoardIdx].tile;
-            gs.board[selBoardIdx].tile = null;
+        if (drag.kind === 'hand') {
+            const v = myHand[drag.index];
+            space.tile = { value: v, color: myColor, facedown: false };
+            myHand.splice(drag.index, 1);
+            sendMove({ action:'placeTile', index:i, tile: space.tile });
+            showMsg(`Placed ${v === 'D' ? '✦' : v}`);
+        } else if (drag.kind === 'board') {
+            const tile = gs.board[drag.index].tile;
+            gs.board[drag.index].tile = null;
             space.tile = tile;
-            sendMove({ action:'reposition', from:selBoardIdx, to:i, tile });
-            selBoardIdx = null; showMsg('Tile moved');
-            render(); return;
+            sendMove({ action:'reposition', from: drag.index, to: i, tile });
+            showMsg('Tile moved');
         }
-
-        if (selHandIdx === null) { showMsg('Select a tile from your hand first'); return; }
-        if (space.tile)          { showMsg('Space already occupied'); return; }
-        if (space.color !== myColor && !hasNeighbor(i)) {
-            showMsg('Must place on your colour or adjacent to an existing tile'); return;
-        }
-
-        const v = hand()[selHandIdx];
-        space.tile = { value: v, color: myColor, facedown: false };
-        hand().splice(selHandIdx, 1);
-        selHandIdx = null;
-        sendMove({ action:'placeTile', index:i, tile:space.tile });
-        triggerEffect(v);
+        drag = null;
         render();
     }
 
     function handleRightClick(e, i) {
         e.preventDefault();
         if (!gs.board[i].tile) return;
-        if (markedTiles.has(i)) { markedTiles.delete(i); showMsg('X mark removed'); }
-        else                    { markedTiles.add(i);    showMsg('X mark added'); }
+        const fd = !gs.board[i].tile.facedown;
+        gs.board[i].tile.facedown = fd;          // face-down tiles count as 0 in scoring
+        if (fd) markedTiles.add(i); else markedTiles.delete(i);
+        showMsg(fd ? 'Tile turned face-down' : 'Tile turned face-up');
         render();
-        sendMove({ action:'toggleMark', index:i, marked:markedTiles.has(i) });
+        sendMove({ action:'setFacedown', index:i, facedown:fd });
     }
 
-    function triggerEffect(v) {
-        switch (v) {
-            case 1: showMsg("Effect — click an opponent's accessible tile to reposition it"); effectMode = 'reposition-opponent'; break;
-            case 2: showMsg('Effect — click one of your own accessible tiles to reposition it'); effectMode = 'reposition-own'; break;
-            case 3: showMsg('Effect — swap one of your success tokens with a displayed board token'); break;
-            case 4: showMsg('Effect — right-click tiles to mark them face-down with X'); break;
-        }
+    // ── Token drag helpers ──────────────────────────────────────────────────────
+    function clearSlot(id) { gs.tokenSlots.forEach(s => { if (s.occupied === id) s.occupied = null; }); }
+    function snapToSlot(idx) {
+        if (!drag || drag.kind !== 'token') return;
+        const id = drag.id, slot = gs.tokenSlots[idx];
+        clearSlot(id); slot.occupied = id;
+        gs.tokenPositions[id] = { x: slot.x, y: slot.y, location: 'board' };
+        render(); sendMove({ action:'moveToken', tokenId:id, position: gs.tokenPositions[id] });
+    }
+    function handleTokenFreeDrop(e) {
+        if (drag?.kind !== 'token' || e.target.classList.contains('tokenSlot')) return;
+        e.preventDefault();
+        const id = drag.id, rect = document.getElementById('boardContainer').getBoundingClientRect();
+        clearSlot(id);
+        gs.tokenPositions[id] = { x: e.clientX - rect.left, y: e.clientY - rect.top, location: 'board' };
+        render(); sendMove({ action:'moveToken', tokenId:id, position: gs.tokenPositions[id] });
     }
 
-    function handleEffect(i) {
-        const space = gs.board[i];
-        if (effectMode === 'reposition-opponent') {
-            if (space.tile && space.tile.color !== myColor && isAccessible(i)) {
-                effectTile = space.tile; space.tile = null;
-                effectMode = 'place-repositioned';
-                showMsg('Now click an empty space to place the tile');
-                sendMove({ action:'clearTile', index:i });
-            }
-        } else if (effectMode === 'reposition-own') {
-            if (space.tile && space.tile.color === myColor && isAccessible(i)) {
-                effectTile = space.tile; space.tile = null;
-                effectMode = 'place-repositioned';
-                showMsg('Now click an empty space to place the tile');
-                sendMove({ action:'clearTile', index:i });
-            }
-        } else if (effectMode === 'place-repositioned') {
-            if (!space.tile && (space.color === effectTile.color || hasNeighbor(i))) {
-                space.tile = effectTile;
-                sendMove({ action:'placeTile', index:i, tile:space.tile });
-                effectMode = null; effectTile = null;
-                showMsg('Tile repositioned');
-            }
-        }
-        render();
-    }
-
-    // ── Line scoring ──────────────────────────────────────────────────────────
+    // ── Line scoring (manual, informational) ────────────────────────────────────
     function checkLines() {
         let found = false;
         for (let r = 0; r < 6; r++) if (lineFull(r*6,1)) { scoreLine(r*6,1); found = true; }
-        for (let c = 0; c < 6; c++) if (lineFull(c,  6)) { scoreLine(c,  6); found = true; }
-        if (!found) showMsg('No completed lines found');
-        render(); sendState();
+        for (let c = 0; c < 6; c++) if (lineFull(c,6))   { scoreLine(c,6);   found = true; }
+        if (!found) showMsg('No completed lines yet');
     }
-    function lineFull(start, step) {
-        for (let i = 0; i < 6; i++) if (!gs.board[start+i*step].tile) return false;
-        return true;
-    }
+    function lineFull(start, step) { for (let i = 0; i < 6; i++) if (!gs.board[start+i*step].tile) return false; return true; }
     function scoreLine(start, step) {
         let blue = 0, red = 0;
         for (let i = 0; i < 6; i++) {
@@ -970,74 +476,45 @@
             if (!t || t.facedown || t.value === 'D') continue;
             t.color === 'blue' ? blue += t.value : red += t.value;
         }
-        const result = blue > red ? 'Blue wins!' : red > blue ? 'Red wins!' : 'Tie!';
-        showMsg(`Line scored — Blue: ${blue}  ·  Red: ${red}  →  ${result}`);
+        showMsg(`Line — Blue ${blue} · Red ${red} → ${blue>red?'Blue wins':red>blue?'Red wins':'Tie (turn player wins)'}`);
     }
 
-    // ── Networking ────────────────────────────────────────────────────────────
-    function sendMove(move) { if (conn?.open) conn.send({ type:'move', ...move }); }
-    function sendState()    { if (conn?.open) conn.send({ type:'gameState', state:gs }); }
+    // ── Networking ──────────────────────────────────────────────────────────────
+    function sendMove(m)  { if (conn?.open) conn.send({ type:'move', ...m }); }
+    function sendState()  { if (conn?.open) conn.send({ type:'gameState', state: gs }); }
 
-    function applyOpponentMove(data) {
-        switch (data.action) {
-            case 'placeTile':  gs.board[data.index].tile = data.tile; break;
-            case 'clearTile':  gs.board[data.index].tile = null;      break;
-            case 'reposition':
-                gs.board[data.from].tile = null;
-                gs.board[data.to].tile   = data.tile;
-                break;
-            case 'toggleMark':
-                data.marked ? markedTiles.add(data.index) : markedTiles.delete(data.index);
+    function applyOpponentMove(d) {
+        switch (d.action) {
+            case 'placeTile':   gs.board[d.index].tile = d.tile; break;
+            case 'reposition':  gs.board[d.from].tile = null; gs.board[d.to].tile = d.tile; break;
+            case 'setFacedown':
+                if (gs.board[d.index].tile) gs.board[d.index].tile.facedown = d.facedown;
+                d.facedown ? markedTiles.add(d.index) : markedTiles.delete(d.index);
                 break;
             case 'moveToken': {
-                const pos = data.position;
-                gs.tokenPositions[data.tokenId] = pos;
-                gs.tokenSlots.forEach(s => { if (s.occupied === data.tokenId) s.occupied = null; });
-                if (pos.location === 'board') {
-                    const slot = gs.tokenSlots.find(s => s.x === pos.x && s.y === pos.y);
-                    if (slot) slot.occupied = data.tokenId;
-                }
+                const p = d.position; gs.tokenPositions[d.tokenId] = p;
+                gs.tokenSlots.forEach(s => { if (s.occupied === d.tokenId) s.occupied = null; });
+                if (p.location === 'board') { const slot = gs.tokenSlots.find(s => s.x === p.x && s.y === p.y); if (slot) slot.occupied = d.tokenId; }
                 break;
             }
         }
         render();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    function hand() { return myColor === 'blue' ? gs.blueHand : gs.redHand; }
-    function deck() { return myColor === 'blue' ? gs.blueDeck : gs.redDeck; }
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+    function shuffle(a) { const b = [...a]; for (let i = b.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
+    function showMsg(m) { document.getElementById('message').textContent = m; }
 
-    function neighbors(i) {
-        const n = [], r = Math.floor(i/6), c = i%6;
-        if (r > 0) n.push(i-6); if (r < 5) n.push(i+6);
-        if (c > 0) n.push(i-1); if (c < 5) n.push(i+1);
-        return n;
-    }
-    function hasNeighbor(i)          { return neighbors(i).some(n => gs.board[n]?.tile); }
-    function neighborExcept(i, excl) { return neighbors(i).some(n => n !== excl && gs.board[n]?.tile); }
-    function isAccessible(i)         { return neighbors(i).some(n => !gs.board[n]?.tile); }
-
-    function shuffle(a) {
-        const b = [...a];
-        for (let i = b.length-1; i > 0; i--) {
-            const j = Math.floor(Math.random()*(i+1));
-            [b[i],b[j]] = [b[j],b[i]];
-        }
-        return b;
-    }
-    function showMsg(msg) { document.getElementById('message').textContent = msg; }
-
-    // ── Buttons ───────────────────────────────────────────────────────────────
+    // ── Buttons ────────────────────────────────────────────────────────────────
     document.getElementById('drawTile').addEventListener('click', () => {
-        const h = hand(), d = deck();
-        if (h.length >= 2)  { showMsg('Hand is full (max 2 tiles)'); return; }
-        if (d.length === 0) { showMsg('No tiles left in deck');      return; }
-        h.push(d.pop());
-        render(); sendState();
-        showMsg(`Drew: ${h[h.length-1]}`);
+        if (myHand.length >= 2) { showMsg('Hand is full (max 2)'); return; }
+        if (myDeck.length === 0){ showMsg('Deck is empty'); return; }
+        myHand.push(myDeck.pop());
+        render();
+        showMsg(`Drew ${myHand[myHand.length-1]}`);
     });
     document.getElementById('checkLinesBtn').addEventListener('click', checkLines);
-    document.getElementById('syncBtn').addEventListener('click', () => { sendState(); showMsg('State synced'); });
+    document.getElementById('syncBtn').addEventListener('click', () => { sendState(); showMsg('Board state sent'); });
 </script>
 </body>
 </html>
