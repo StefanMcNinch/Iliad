@@ -5,1305 +5,1005 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iliad - P2P Board Game</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.1/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #2c1810 0%, #4a2420 100%);
-            color: #f5e6d3;
+            font-family: 'Cinzel', Georgia, serif;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(140,50,10,0.55) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 80%, rgba(50,10,70,0.45) 0%, transparent 55%),
+                linear-gradient(160deg, #0c0502 0%, #1c0a06 50%, #100304 100%);
+            color: #f0dfc0;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
+
         #gameContainer {
             max-width: 1200px;
             width: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            background: linear-gradient(150deg, rgba(32,12,6,0.97), rgba(18,6,3,0.97));
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(212,175,55,0.3);
+            box-shadow:
+                0 0 0 2px rgba(70,35,5,0.7),
+                0 30px 90px rgba(0,0,0,0.9),
+                inset 0 1px 0 rgba(212,175,55,0.12);
         }
-        #connectionPanel {
-            text-align: center;
-            padding: 30px;
-        }
+
+        /* ── Connection Panel ── */
+        #connectionPanel { text-align: center; padding: 50px 30px; }
+
         #connectionPanel h1 {
+            font-family: 'Cinzel Decorative', serif;
+            font-weight: 700;
             color: #d4af37;
-            margin-bottom: 30px;
-            font-size: 3em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-size: 4.5em;
+            letter-spacing: 0.2em;
+            margin-bottom: 4px;
+            text-shadow:
+                0 0 30px rgba(212,175,55,0.7),
+                0 0 60px rgba(212,175,55,0.3),
+                3px 5px 12px rgba(0,0,0,0.95);
         }
+
+        .subtitle {
+            font-size: 0.7em;
+            color: rgba(212,175,55,0.5);
+            letter-spacing: 0.45em;
+            text-transform: uppercase;
+            margin-bottom: 36px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px auto;
+            max-width: 480px;
+            color: rgba(212,175,55,0.4);
+            font-size: 0.75em;
+            letter-spacing: 0.3em;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent);
+        }
+
         .connection-info {
-            margin: 20px 0;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            margin: 20px auto;
+            padding: 24px;
+            background: rgba(212,175,55,0.04);
+            border: 1px solid rgba(212,175,55,0.18);
+            border-radius: 12px;
+            max-width: 480px;
+            box-shadow: inset 0 1px 0 rgba(212,175,55,0.07);
         }
-        input, button {
-            padding: 10px 20px;
-            margin: 5px;
+        .connection-info h3 {
+            color: #d4af37;
+            letter-spacing: 0.12em;
+            margin-bottom: 16px;
+            font-size: 0.85em;
+        }
+
+        input {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(212,175,55,0.3) !important;
+            color: #f0dfc0;
+            font-family: 'Cinzel', serif;
             border-radius: 5px;
-            border: none;
-            font-size: 16px;
         }
+        input::placeholder { color: rgba(240,223,192,0.3); }
+
         button {
-            background: #d4af37;
-            color: #2c1810;
+            background: linear-gradient(150deg, #c89828, #d4af37, #b08818);
+            color: #1a0800;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
+            font-weight: 700;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.06em;
+            transition: all 0.2s;
+            border-radius: 5px;
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.25),
+                inset 0 -1px 0 rgba(0,0,0,0.2);
         }
-        button:hover { background: #e5c348; transform: scale(1.05); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button:hover {
+            background: linear-gradient(150deg, #d8a830, #ecc040, #c89828);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.55), 0 0 12px rgba(212,175,55,0.25);
+        }
+        button:active { transform: translateY(0); }
+
+        /* ── Game Layout ── */
         #gameBoard {
             display: none;
-            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-columns: 210px 1fr 210px;
             gap: 20px;
+            align-items: start;
         }
+
+        /* ── Player Panels ── */
+        .playerPanel {
+            background: linear-gradient(160deg, rgba(38,16,6,0.92), rgba(22,8,3,0.92));
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(212,175,55,0.18);
+            box-shadow:
+                0 6px 24px rgba(0,0,0,0.6),
+                inset 0 1px 0 rgba(212,175,55,0.07);
+        }
+        .playerPanel h3 {
+            color: #d4af37;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(212,175,55,0.18);
+        }
+        #modeLabel {
+            color: rgba(212,175,55,0.45);
+            font-size: 0.68em;
+            letter-spacing: 0.15em;
+        }
+
+        .tokenStorage {
+            min-height: 80px;
+            background: rgba(0,0,0,0.22);
+            border: 1px dashed rgba(212,175,55,0.28);
+            border-radius: 8px;
+            padding: 8px; margin-top: 8px;
+            display: flex; flex-wrap: wrap; gap: 5px;
+        }
+        .tokenStorage.dragover {
+            background: rgba(212,175,55,0.1);
+            border-color: #d4af37;
+            box-shadow: inset 0 0 12px rgba(212,175,55,0.08);
+        }
+
+        /* ── Hand ── */
+        #hand {
+            display: flex; gap: 8px;
+            margin-top: 10px; flex-wrap: wrap;
+            min-height: 58px;
+        }
+        .handTile {
+            width: 50px; height: 50px;
+            border: 1px solid rgba(212,175,55,0.45);
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: 700; font-size: 20px; color: white;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+        .handTile.blue {
+            background: linear-gradient(145deg, #162c5e, #244880, #162c5e);
+        }
+        .handTile.red {
+            background: linear-gradient(145deg, #500e0e, #7e2020, #500e0e);
+        }
+        .handTile.dolos {
+            background: radial-gradient(circle at 35% 32%, #606060, #181818) !important;
+        }
+        .handTile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.65), 0 0 8px rgba(212,175,55,0.15);
+        }
+        .handTile.selected {
+            border-color: #ffee00;
+            box-shadow: 0 0 22px rgba(255,238,0,0.55), 0 4px 14px rgba(0,0,0,0.6);
+        }
+
+        /* ── Board Area ── */
+        #boardWrapper {
+            display: flex; flex-direction: column; align-items: center;
+        }
+        #boardContainer { position: relative; }
+
+        /* Decorative corners */
+        .board-corner {
+            position: absolute;
+            color: rgba(212,175,55,0.55);
+            font-size: 22px;
+            z-index: 10;
+            pointer-events: none;
+            line-height: 1;
+            text-shadow: 0 0 8px rgba(212,175,55,0.3);
+        }
+        .board-corner.tl { top: 8px;  left: 8px; }
+        .board-corner.tr { top: 8px;  right: 8px; transform: scaleX(-1); }
+        .board-corner.bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
+        .board-corner.br { bottom: 8px; right: 8px; transform: scale(-1); }
+
+        #boardBorder {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 18px;
+            background:
+                radial-gradient(ellipse at 50%   0%, rgba(212,175,55,0.14) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 100%, rgba(212,175,55,0.14) 0%, transparent 55%),
+                radial-gradient(ellipse at   0% 50%, rgba(212,175,55,0.14) 0%, transparent 55%),
+                radial-gradient(ellipse at 100% 50%, rgba(212,175,55,0.14) 0%, transparent 55%),
+                linear-gradient(140deg, #3c2408 0%, #543010 30%, #2c1604 55%, #543010 80%, #3c2408 100%);
+            border: 2px solid rgba(212,175,55,0.38);
+            box-shadow:
+                0 0 0 1px rgba(60,32,4,0.9),
+                inset 0 0 0 2px rgba(212,175,55,0.12),
+                inset 0 0 0 4px rgba(0,0,0,0.25),
+                0 10px 40px rgba(0,0,0,0.75);
+            pointer-events: none;
+            z-index: 0;
+        }
+
         #board {
             display: grid;
             grid-template-columns: repeat(6, 60px);
             grid-template-rows: repeat(6, 60px);
             gap: 2px;
-            background: #8b7355;
+            background: linear-gradient(135deg, #4a3010, #6a4820, #4a3010);
             padding: 10px;
             border-radius: 10px;
-            position: relative;
             margin: 80px;
+            position: relative; z-index: 1;
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.6),
+                0 6px 24px rgba(0,0,0,0.7),
+                inset 0 1px 0 rgba(255,255,255,0.04);
         }
-        #boardBorder {
-            position: absolute;
-            top: -80px;
-            left: -80px;
-            right: -80px;
-            bottom: -80px;
-            border: 75px solid rgba(139, 115, 85, 0.3);
-            border-radius: 15px;
-            pointer-events: none;
-        }
-        #tokenDropZone {
-            position: absolute;
-            top: -75px;
-            left: -75px;
-            right: -75px;
-            bottom: -75px;
-            pointer-events: none;
-        }
-        .tokenSlot {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border: 2px dashed rgba(212, 175, 55, 0.3);
-            border-radius: 50%;
-            pointer-events: all;
-        }
-        .tokenSlot.occupied {
-            border-color: transparent;
-        }
-        .tokenSlot.dragover {
-            background: rgba(212, 175, 55, 0.3);
-            border-color: #d4af37;
-        }
+
+        /* ── Spaces ── */
         .space {
-            width: 60px;
-            height: 60px;
-            border: 2px solid #5a4a3a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s;
+            width: 60px; height: 60px;
+            border: 1px solid rgba(0,0,0,0.45);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative;
+            transition: filter 0.15s, border-color 0.15s;
         }
-        .space.blue { background: linear-gradient(135deg, #2e5090, #4a7cc7); }
-        .space.red { background: linear-gradient(135deg, #8b2020, #c73a3a); }
-        .space:hover { border-color: #d4af37; transform: scale(1.05); }
+        .space.blue {
+            background:
+                linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 50%),
+                linear-gradient(135deg, #1a3468, #284e8c);
+            box-shadow: inset 0 1px 0 rgba(80,130,255,0.12);
+        }
+        .space.red {
+            background:
+                linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 50%),
+                linear-gradient(135deg, #681414, #8e2222);
+            box-shadow: inset 0 1px 0 rgba(255,80,80,0.12);
+        }
+        .space:hover { filter: brightness(1.25); border-color: rgba(212,175,55,0.65); }
+        .space.highlighted {
+            border: 2px solid #ffee00 !important;
+            box-shadow: 0 0 14px rgba(255,238,0,0.5), inset 0 0 10px rgba(255,238,0,0.12);
+            filter: brightness(1.2);
+        }
+
+        /* ── Tiles ── */
         .tile {
-            width: 50px;
-            height: 50px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 24px;
-            color: white;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            width: 52px; height: 52px;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 22px; color: white;
+            cursor: pointer; position: relative;
+            transition: filter 0.15s, transform 0.1s;
         }
-        .tile.blue { background: linear-gradient(135deg, #1e3a6f, #3a5c9e); }
-        .tile.red { background: linear-gradient(135deg, #6b1f1f, #9e3a3a); }
-        .tile.dolos { background: radial-gradient(circle, #4a4a4a, #1a1a1a); }
-        .tile.facedown { background: #3a3a3a; color: transparent; }
-        #playerInfo {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 10px;
+        .tile.blue {
+            background: linear-gradient(145deg, #2a4e92, #162e66, #2a4e92);
+            border: 1px solid rgba(80,140,255,0.28);
+            box-shadow:
+                0 4px 10px rgba(0,0,0,0.65),
+                inset 0 1px 0 rgba(140,190,255,0.22),
+                inset 0 -1px 0 rgba(0,0,0,0.3);
         }
-        .tokenStorage {
-            min-height: 80px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px dashed #d4af37;
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
+        .tile.red {
+            background: linear-gradient(145deg, #8c2020, #521010, #8c2020);
+            border: 1px solid rgba(255,80,80,0.28);
+            box-shadow:
+                0 4px 10px rgba(0,0,0,0.65),
+                inset 0 1px 0 rgba(255,140,140,0.22),
+                inset 0 -1px 0 rgba(0,0,0,0.3);
         }
-        .tokenStorage.dragover {
-            background: rgba(212, 175, 55, 0.2);
-            border-color: #ffff00;
+        .tile.dolos {
+            background: radial-gradient(circle at 35% 30%, #606060, #181818);
+            border: 1px solid rgba(160,160,160,0.25);
+            box-shadow:
+                0 4px 10px rgba(0,0,0,0.65),
+                inset 0 1px 0 rgba(220,220,220,0.12);
         }
-        #hand {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-            min-height: 60px;
+        .tile.facedown {
+            background: linear-gradient(145deg, #282828, #141414);
+            border: 1px solid rgba(70,70,70,0.4);
+            color: transparent;
         }
-        .handTile {
-            width: 50px;
-            height: 50px;
-            border: 2px solid #d4af37;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 20px;
-            color: white;
-            transition: all 0.3s;
-        }
-        .handTile.blue { background: linear-gradient(135deg, #1e3a6f, #3a5c9e); }
-        .handTile.red { background: linear-gradient(135deg, #6b1f1f, #9e3a3a); }
-        .handTile.dolos { background: radial-gradient(circle, #4a4a4a, #1a1a1a) !important; }
-        .handTile:hover { transform: scale(1.1); }
-        .handTile.selected { border-color: #ffff00; box-shadow: 0 0 15px #ffff00; }
-        #successTokenDisplay {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-around;
-            padding: 0 10px;
-        }
-        .successToken {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            cursor: grab;
-            position: absolute;
-            z-index: 100;
-            transition: none;
-        }
-        .successToken:active {
-            cursor: grabbing;
-        }
-        .successToken.dragging {
-            opacity: 0.5;
-            z-index: 1000;
-        }
-        .successToken.zeus { background: #6a6a6a; }
-        .successToken.apollo { background: #f4a460; }
-        .successToken.athena { background: #d8bfd8; }
-        .successToken.poseidon { background: #4682b4; }
-        .successToken.aphrodite { background: #ff69b4; }
-        .successToken.positive { background: #ffd700; color: black; }
-        .successToken.negative { background: #8b0000; color: white; }
-        .successToken.marriage { background: #90ee90; }
+        .tile:hover { filter: brightness(1.18); transform: translateY(-1px); }
+
         .tile-mark {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 40px;
-            color: #ff0000;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-size: 38px;
+            color: rgba(255,30,30,0.92);
+            font-weight: 900;
+            text-shadow: 0 0 10px rgba(255,0,0,0.55), 1px 2px 4px rgba(0,0,0,0.85);
             pointer-events: none;
         }
+
+        /* ── Success Tokens ── */
+        .tokenSlot {
+            position: absolute;
+            width: 44px; height: 44px;
+            border: 1px dashed rgba(212,175,55,0.28);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: all;
+            z-index: 2;
+        }
+        .tokenSlot.occupied { border-color: transparent; }
+        .tokenSlot.dragover {
+            background: rgba(212,175,55,0.18);
+            border-color: #d4af37;
+            box-shadow: 0 0 14px rgba(212,175,55,0.5);
+        }
+
+        .successToken {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 700;
+            font-family: 'Cinzel', serif;
+            cursor: grab;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            border: 2px solid rgba(0,0,0,0.45);
+            transition: box-shadow 0.15s, filter 0.15s;
+        }
+        .successToken:hover {
+            z-index: 4;
+            filter: brightness(1.15);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.75), 0 0 10px rgba(212,175,55,0.35) !important;
+        }
+        .successToken:active { cursor: grabbing; }
+        .successToken.dragging { opacity: 0.4; }
+
+        /* Coin-style tokens with radial highlight */
+        .successToken.zeus {
+            background: radial-gradient(circle at 35% 30%, #a0a0a0, #484848);
+            border-color: #282828;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25);
+            color: #fff;
+        }
+        .successToken.apollo {
+            background: radial-gradient(circle at 35% 30%, #ffc868, #b87028);
+            border-color: #784018;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
+            color: #fff;
+        }
+        .successToken.athena {
+            background: radial-gradient(circle at 35% 30%, #e0c8e0, #9878a0);
+            border-color: #584060;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
+            color: #2a0830;
+        }
+        .successToken.poseidon {
+            background: radial-gradient(circle at 35% 30%, #5898d8, #1e5090);
+            border-color: #082858;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25);
+            color: #fff;
+        }
+        .successToken.aphrodite {
+            background: radial-gradient(circle at 35% 30%, #ff9ab8, #cc4070);
+            border-color: #880038;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.25);
+            color: #fff;
+        }
+        .successToken.positive {
+            background: radial-gradient(circle at 35% 30%, #ffe058, #c88c08);
+            border-color: #785800;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.4);
+            color: #3a1e00;
+        }
+        .successToken.negative {
+            background: radial-gradient(circle at 35% 30%, #c02828, #680808);
+            border-color: #380000;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,100,100,0.2);
+            color: #ffcccc;
+        }
+        .successToken.marriage {
+            background: radial-gradient(circle at 35% 30%, #88e888, #389838);
+            border-color: #185818;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
+            color: #083008;
+        }
+        .tokenStorage .successToken {
+            position: relative;
+            transform: none;
+        }
+
+        /* ── Message & Reference ── */
         #message {
             text-align: center;
-            padding: 10px;
-            background: rgba(212, 175, 55, 0.2);
-            border-radius: 5px;
-            margin-top: 10px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.03));
+            border: 1px solid rgba(212,175,55,0.14);
+            border-radius: 6px;
+            margin-top: 12px;
             min-height: 40px;
+            width: 100%;
+            font-size: 0.8em;
+            letter-spacing: 0.04em;
+            color: #d8c090;
         }
+
+        #tileReference {
+            background: linear-gradient(150deg, rgba(28,10,3,0.92), rgba(16,6,2,0.92));
+            border: 1px solid rgba(212,175,55,0.13);
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 11.5px;
+            width: 100%;
+            color: #b8a070;
+        }
+        #tileReference h4 {
+            color: #d4af37;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            font-size: 0.82em;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(212,175,55,0.14);
+        }
+        #tileReference div { margin-bottom: 4px; }
+        #tileReference strong { color: #d4af37; }
+
         #debugInfo {
-            background: rgba(0,0,0,0.5);
-            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
             margin-top: 10px;
             border-radius: 5px;
-            font-size: 12px;
+            font-size: 10.5px;
+            color: #705838;
+            font-family: monospace;
+            letter-spacing: 0;
         }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <div id="connectionPanel">
-            <h1>⚔️ ILIAD ⚔️</h1>
-            <div class="connection-info">
-                <h3>Start or Join Game</h3>
-                <p>Your ID: <strong id="myId">Generating...</strong></p>
-                <button id="copyId">Copy My ID</button>
-                <br><br>
-                <input type="text" id="peerId" placeholder="Enter opponent's ID">
-                <button id="connectBtn">Connect</button>
-                <br><br>
-                <p id="status">Waiting for connection...</p>
-            </div>
-        </div>
-        
-        <div id="gameBoard">
-            <div id="playerInfo">
-                <h3 id="playerRole"></h3>
-                <div>Mode: <span id="currentTurn"></span></div>
-                <div>Your Token Storage:</div>
-                <div id="myTokenStorage" class="tokenStorage"></div>
-                <div>Hand: <span id="handCount"></span></div>
-                <div id="hand"></div>
-                <button id="drawTile" style="margin-top: 10px;">Draw Tile</button>
-                <button id="checkLines" style="margin-top: 10px;">Check for Scoring Lines</button>
-                <div id="debugInfo"></div>
-            </div>
-            
-            <div>
-                <div id="successTokenDisplay"></div>
-                <div id="board"></div>
-                <div id="message"></div>
-                <div id="tileReference" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; margin-top: 15px;">
-                    <h4 style="color: #d4af37; margin-bottom: 10px;">Tile Effects Reference</h4>
-                    <div style="font-size: 14px;">
-                        <div><strong>1:</strong> Reposition one opponent's accessible tile</div>
-                        <div><strong>2:</strong> Reposition one of your own accessible tiles</div>
-                        <div><strong>3:</strong> Swap two success tokens</div>
-                        <div><strong>4:</strong> Flip this tile and one opponent neighbor tile</div>
-                        <div><strong>5:</strong> No effect</div>
-                        <div><strong>✦ (Dolos):</strong> Equal to sum of neighboring tiles</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="opponentInfo">
-                <h3>Opponent</h3>
-                <div>Their Token Storage:</div>
-                <div id="oppTokenStorage" class="tokenStorage"></div>
-            </div>
+<div id="gameContainer">
+
+    <!-- Connection Panel -->
+    <div id="connectionPanel">
+        <h1>ILIAD</h1>
+        <div class="subtitle">⚔ &nbsp; The Legend of Troy &nbsp; ⚔</div>
+        <div class="divider">Connect to Begin</div>
+        <div class="connection-info">
+            <h3>YOUR SESSION ID</h3>
+            <p>Your ID: <strong id="myId">Generating...</strong></p>
+            <button id="copyId">Copy My ID</button>
+            <br><br>
+            <input type="text" id="peerId" placeholder="Enter opponent's ID">
+            <button id="connectBtn">Connect</button>
+            <br><br>
+            <p id="status" style="color:rgba(212,175,55,0.5);font-size:0.8em;letter-spacing:0.1em">Waiting for connection...</p>
         </div>
     </div>
 
-    <script>
-        const GODS = ['Zeus', 'Apollo', 'Athena', 'Poseidon', 'Aphrodite'];
-        const TILE_VALUES = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 'D', 'D', 'D'];  // 18 tiles per player
-        
-        let peer, conn;
-        let myId, isHost;
-        let gameState = {
-            board: Array(36).fill(null),
-            currentPlayer: 'blue',
-            blueTokens: [],
-            redTokens: [],
-            successTokens: [],
-            tokenPositions: {},  // Track positions of all tokens
-            tokenSlots: [],      // Track slot positions around board
-            reserveTokens: [],   // Track tokens not initially placed
-            blueDeck: [],
-            redDeck: [],
-            blueHand: [],
-            redHand: [],
-            phase: 'setup'
-        };
-        let selectedTile = null;
-        let myColor = null;
-        let effectMode = null;
-        let effectData = null;
-        let selectedBoardTile = null;  // Track selected tile from board
-        let markedTiles = new Set();  // Track tiles marked with X
+    <!-- Game Board -->
+    <div id="gameBoard">
 
-        // Initialize PeerJS
-        peer = new Peer();
-        
-        peer.on('open', id => {
-            document.getElementById('myId').textContent = id;
-            myId = id;
+        <!-- My Panel -->
+        <div class="playerPanel">
+            <h3 id="playerRole"></h3>
+            <div id="modeLabel">Free Play Mode</div>
+            <div style="margin-top:12px;font-size:0.75em;letter-spacing:0.08em;color:rgba(212,175,55,0.6)">Token Storage</div>
+            <div id="myTokenStorage" class="tokenStorage"></div>
+            <div style="margin-top:12px;font-size:0.75em;letter-spacing:0.08em;color:rgba(212,175,55,0.6)">Hand &nbsp;<span id="handCount" style="color:#808060"></span></div>
+            <div id="hand"></div>
+            <button id="drawTile"      style="margin-top:12px;width:100%;padding:8px">Draw Tile</button>
+            <button id="checkLinesBtn" style="margin-top:6px; width:100%;padding:8px">Check Scoring Lines</button>
+            <div id="debugInfo"></div>
+        </div>
+
+        <!-- Board -->
+        <div id="boardWrapper">
+            <div id="boardContainer">
+                <div id="boardBorder"></div>
+                <span class="board-corner tl">✦</span>
+                <span class="board-corner tr">✦</span>
+                <span class="board-corner bl">✦</span>
+                <span class="board-corner br">✦</span>
+                <div id="board"></div>
+            </div>
+            <div id="message"></div>
+            <div id="tileReference">
+                <h4>Tile Effects Reference</h4>
+                <div><strong>1 —</strong> Reposition one of the opponent's accessible tiles</div>
+                <div><strong>2 —</strong> Reposition one of your own accessible tiles</div>
+                <div><strong>3 —</strong> Swap one of your success tokens with a displayed token</div>
+                <div><strong>4 —</strong> Mark tiles face-down (right-click to add/remove X)</div>
+                <div><strong>5 —</strong> No effect</div>
+                <div><strong>✦ Dolos —</strong> No effect; value = sum of both neighbours in scoring line</div>
+            </div>
+        </div>
+
+        <!-- Opponent Panel -->
+        <div class="playerPanel">
+            <h3>Opponent</h3>
+            <div style="font-size:0.75em;letter-spacing:0.08em;color:rgba(212,175,55,0.6)">Token Storage</div>
+            <div id="oppTokenStorage" class="tokenStorage"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ── Constants ──────────────────────────────────────────────────────────────
+    const GODS        = ['Zeus', 'Apollo', 'Athena', 'Poseidon', 'Aphrodite'];
+    const TILE_VALUES = [1,1,1, 2,2,2, 3,3,3, 4,4,4, 5,5,5, 'D','D','D'];
+    const BOARD_PX    = 380;
+    const BORDER_PX   = 80;
+
+    // ── Peer / connection state ────────────────────────────────────────────────
+    let peer, conn, myId, isHost, myColor;
+
+    // ── Game state ─────────────────────────────────────────────────────────────
+    let gs = {
+        board:          Array(36).fill(null),
+        successTokens:  [],
+        tokenPositions: {},
+        tokenSlots:     [],
+        reserveIds:     [],
+        blueDeck: [], redDeck: [],
+        blueHand: [], redHand: [],
+    };
+
+    // ── Local UI state ─────────────────────────────────────────────────────────
+    let selHandIdx   = null;
+    let selBoardIdx  = null;
+    let effectMode   = null;
+    let effectTile   = null;
+    let markedTiles  = new Set();
+    let dragToken    = null;
+
+    // ── PeerJS ────────────────────────────────────────────────────────────────
+    peer = new Peer();
+    peer.on('open', id => { myId = id; document.getElementById('myId').textContent = id; });
+    peer.on('connection', c => { conn = c; isHost = true; myColor = 'blue'; setupConn(); initGame(); });
+
+    document.getElementById('copyId').addEventListener('click', () => {
+        navigator.clipboard.writeText(myId);
+        const s = document.getElementById('status');
+        s.textContent = 'ID copied!';
+        setTimeout(() => s.textContent = 'Waiting for connection...', 2000);
+    });
+
+    document.getElementById('connectBtn').addEventListener('click', () => {
+        const id = document.getElementById('peerId').value.trim();
+        if (id && id !== myId) {
+            conn = peer.connect(id);
+            isHost = false; myColor = 'red';
+            conn.on('open', setupConn);
+        }
+    });
+
+    // ── Connection setup ──────────────────────────────────────────────────────
+    function setupConn() {
+        document.getElementById('status').textContent = 'Connected!';
+        document.getElementById('connectionPanel').style.display = 'none';
+        document.getElementById('gameBoard').style.display = 'grid';
+
+        conn.on('data', data => {
+            if (data.type === 'gameState') { gs = data.state; render(); showMsg('Game state synced'); }
+            else if (data.type === 'move') applyOpponentMove(data);
+        });
+        conn.on('close', () => showMsg('Opponent disconnected'));
+
+        if (isHost) setTimeout(sendState, 150);
+    }
+
+    // ── Game init ─────────────────────────────────────────────────────────────
+    function initGame() {
+        for (let i = 0; i < 36; i++) {
+            const r = Math.floor(i / 6), c = i % 6;
+            gs.board[i] = { color: (r % 2 === 0 ? c % 2 === 0 : c % 2 === 1) ? 'blue' : 'red', tile: null };
+        }
+        gs.blueDeck = shuffle([...TILE_VALUES]);
+        gs.redDeck  = shuffle([...TILE_VALUES]);
+        for (let i = 0; i < 2; i++) {
+            gs.blueHand.push(gs.blueDeck.pop());
+            gs.redHand.push(gs.redDeck.pop());
+        }
+        setupTokens();
+        render();
+        sendState();
+    }
+
+    // ── Token setup ───────────────────────────────────────────────────────────
+    function setupTokens() {
+        const all = [];
+        GODS.forEach(god =>
+            all.push({ type:'god', god, value: Math.floor(Math.random()*10)+1, id:`tk-${god}` })
+        );
+        ['Shield','Spear','Chariot','Helm','Sword','Bow','Armor','Horse','Glory','Favor','Victory']
+            .forEach((item,i) => all.push({ type:'positive', item, value:10, id:`tk-pos${i}` }));
+        [{item:'Weakened',value:-3},{item:'Morale',value:-3},{item:'Plague',value:-5},
+         {item:'Discord',value:-5},{item:'Exhaustion',value:-5},{item:'Famine',value:-10},
+         {item:'Firestorm',value:-10},{item:'Curse',value:-10},{item:'Betrayal',value:-5},
+         {item:'Storm',value:-5},{item:'Defeat',value:-10}]
+            .forEach((n,i) => all.push({ type:'negative', item:n.item, value:n.value, id:`tk-neg${i}` }));
+        all.push({ type:'marriage', value:0, id:'tk-m1' });
+        all.push({ type:'marriage', value:0, id:'tk-m2' });
+
+        const pool = shuffle(all);
+        const board24 = [];
+        const rest    = [...pool];
+        for (let i = 0; i < rest.length && board24.length < 5; i++) {
+            if (rest[i].value >= 0) { board24.push(...rest.splice(i,1)); i--; }
+        }
+        const restShuf = shuffle(rest);
+        board24.push(...restShuf.slice(0,19));
+        const reserve = restShuf.slice(19);
+
+        gs.successTokens = shuffle([...board24, ...reserve]);
+        gs.reserveIds    = reserve.map(t => t.id);
+
+        gs.tokenSlots = [];
+        const sp   = BOARD_PX / 6;
+        const half = sp / 2;
+        const mid  = BORDER_PX / 2;
+
+        for (let i = 0; i < 24; i++) {
+            let x, y;
+            if      (i < 6)  { x = BORDER_PX + half + i       * sp; y = mid; }
+            else if (i < 12) { x = BORDER_PX + BOARD_PX + mid;       y = BORDER_PX + half + (i-6)  * sp; }
+            else if (i < 18) { x = BORDER_PX + BOARD_PX - half - (i-12) * sp; y = BORDER_PX + BOARD_PX + mid; }
+            else             { x = mid;                               y = BORDER_PX + BOARD_PX - half - (i-18) * sp; }
+            gs.tokenSlots.push({ x, y, occupied: null, index: i });
+        }
+
+        shuffle(board24).forEach((token, i) => {
+            const slot = gs.tokenSlots[i];
+            slot.occupied = token.id;
+            gs.tokenPositions[token.id] = { x: slot.x, y: slot.y, location: 'board' };
+        });
+        reserve.forEach(t => { gs.tokenPositions[t.id] = { location: 'reserve' }; });
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function render() {
+        document.getElementById('playerRole').textContent =
+            myColor === 'blue' ? '🛡 Hector (Blue)' : '⚔ Achilles (Red)';
+
+        const myHand = hand(), myDeck = deck();
+        document.getElementById('handCount').textContent = `(${myHand.length})`;
+        document.getElementById('debugInfo').innerHTML =
+            `Deck: ${myDeck.length} / 18 &nbsp;|&nbsp; Hand: [${myHand.join(', ')}]`;
+
+        const handEl = document.getElementById('hand');
+        handEl.innerHTML = '';
+        myHand.forEach((v, i) => {
+            const d = document.createElement('div');
+            d.className = `handTile ${myColor}${v === 'D' ? ' dolos' : ''}`;
+            d.textContent = v === 'D' ? '✦' : v;
+            if (selHandIdx === i) d.classList.add('selected');
+            d.addEventListener('click', () => selectHandTile(i));
+            handEl.appendChild(d);
         });
 
-        peer.on('connection', connection => {
-            conn = connection;
-            isHost = true;
-            myColor = 'blue';
-            setupConnection();
-            initGame();
-        });
+        const boardEl = document.getElementById('board');
+        boardEl.innerHTML = '';
+        gs.board.forEach((space, i) => {
+            const sp = document.createElement('div');
+            sp.className = `space ${space.color}`;
+            if (selBoardIdx === i) sp.classList.add('highlighted');
 
-        document.getElementById('copyId').addEventListener('click', () => {
-            navigator.clipboard.writeText(myId);
-            document.getElementById('status').textContent = 'ID copied!';
-            setTimeout(() => {
-                document.getElementById('status').textContent = 'Waiting for connection...';
-            }, 2000);
-        });
-
-        document.getElementById('connectBtn').addEventListener('click', () => {
-            const peerId = document.getElementById('peerId').value;
-            if (peerId && peerId !== myId) {
-                conn = peer.connect(peerId);
-                isHost = false;
-                myColor = 'red';
-                conn.on('open', () => {
-                    setupConnection();
-                });
-            }
-        });
-
-        function setupConnection() {
-            document.getElementById('status').textContent = 'Connected!';
-            document.getElementById('connectionPanel').style.display = 'none';
-            document.getElementById('gameBoard').style.display = 'grid';
-            
-            conn.on('data', data => {
-                if (data.type === 'gameState') {
-                    gameState = data.state;
-                    updateDisplay();
-                    showMessage(`Game state received. Your hand has ${(myColor === 'blue' ? gameState.blueHand : gameState.redHand).length} tiles`);
-                } else if (data.type === 'move') {
-                    handleOpponentMove(data);
-                }
-            });
-            
-            conn.on('close', () => {
-                showMessage('Opponent disconnected');
-            });
-            
-            if (isHost) {
-                setTimeout(() => sendGameState(), 100);
-            }
-        }
-
-        function initGame() {
-            // Setup board spaces
-            for (let i = 0; i < 36; i++) {
-                const row = Math.floor(i / 6);
-                const col = i % 6;
-                const isBlue = (row % 2 === 0) ? (col % 2 === 0) : (col % 2 === 1);
-                gameState.board[i] = { color: isBlue ? 'blue' : 'red', tile: null };
-            }
-            
-            // Setup success tokens
-            setupSuccessTokens();
-            
-            // Setup decks
-            gameState.blueDeck = shuffleArray([...TILE_VALUES]);
-            gameState.redDeck = shuffleArray([...TILE_VALUES]);
-            
-            // Initial draw
-            for (let i = 0; i < 2; i++) {
-                gameState.blueHand.push(gameState.blueDeck.pop());
-                gameState.redHand.push(gameState.redDeck.pop());
-            }
-            
-            updateDisplay();
-            showMessage('Game initialized! Blue starts.');
-        }
-
-        function setupSuccessTokens() {
-            const tokens = [];
-            
-            // 5 god tokens with random values 1-10
-            GODS.forEach(god => {
-                tokens.push({ type: 'god', god, value: Math.floor(Math.random() * 10) + 1, id: `token-${god}` });
-            });
-            
-            // 8 positive tokens (various items, all +10)
-            const positiveItems = ['Shield', 'Spear', 'Chariot', 'Helm', 'Sword', 'Bow', 'Armor', 'Horse'];
-            positiveItems.forEach((item, i) => {
-                tokens.push({ type: 'positive', item, value: 10, id: `token-positive-${i}` });
-            });
-            
-            // 8 negative tokens (various penalties)
-            const negativeItems = [
-                { item: 'Weakened', value: -3 },
-                { item: 'Morale', value: -3 },
-                { item: 'Plague', value: -5 },
-                { item: 'Discord', value: -5 },
-                { item: 'Exhaustion', value: -5 },
-                { item: 'Famine', value: -10 },
-                { item: 'Firestorm', value: -10 },
-                { item: 'Curse', value: -10 }
-            ];
-            negativeItems.forEach((neg, i) => {
-                tokens.push({ type: 'negative', item: neg.item, value: neg.value, id: `token-negative-${i}` });
-            });
-            
-            // 2 marriage tokens (Helen)
-            tokens.push({ type: 'marriage', value: 0, id: 'token-marriage1' });
-            tokens.push({ type: 'marriage', value: 0, id: 'token-marriage2' });
-            
-            // 6 additional mixed tokens to reach 29 total
-            tokens.push({ type: 'positive', item: 'Glory', value: 10, id: 'token-glory' });
-            tokens.push({ type: 'positive', item: 'Favor', value: 10, id: 'token-favor' });
-            tokens.push({ type: 'negative', item: 'Betrayal', value: -5, id: 'token-betrayal' });
-            tokens.push({ type: 'negative', item: 'Storm', value: -5, id: 'token-storm' });
-            tokens.push({ type: 'positive', item: 'Victory', value: 10, id: 'token-victory' });
-            tokens.push({ type: 'negative', item: 'Defeat', value: -10, id: 'token-defeat' });
-            
-            // Shuffle all tokens
-            let shuffledTokens = shuffleArray(tokens);
-            
-            // Select 24 tokens for initial board placement
-            let boardTokens = [];
-            let reserveTokens = [];
-            let nonNegCount = 0;
-            
-            // First ensure 5 non-negative tokens are in the initial placement
-            for (let i = 0; i < shuffledTokens.length && boardTokens.length < 5; i++) {
-                if (shuffledTokens[i].value >= 0) {
-                    boardTokens.push(shuffledTokens[i]);
-                    shuffledTokens.splice(i, 1);
-                    i--;
-                }
-            }
-            
-            // Randomly select 19 more tokens to reach 24 total on board
-            shuffledTokens = shuffleArray(shuffledTokens);
-            boardTokens = [...boardTokens, ...shuffledTokens.slice(0, 19)];
-            reserveTokens = shuffledTokens.slice(19);
-            
-            // Shuffle board tokens for random placement
-            boardTokens = shuffleArray(boardTokens);
-            
-            // Create token slots around the board - 24 slots for initial placement
-            gameState.tokenSlots = [];
-            const totalSlots = 24;
-            const boardSize = 380; // 6*60 + 2*10 padding
-            const borderOffset = 55; // Distance from board edge to center of tokens (in the border area)
-            
-            for (let i = 0; i < totalSlots; i++) {
-                let x, y;
-                
-                // Distribute 24 tokens evenly: 6 per side
-                if (i < 6) {
-                    // Top edge (6 tokens)
-                    const spacing = boardSize / 6;
-                    x = spacing/2 + (i * spacing) - 20;
-                    y = -borderOffset;
-                } else if (i < 12) {
-                    // Right edge (6 tokens)
-                    const spacing = boardSize / 6;
-                    x = boardSize + borderOffset - 20;
-                    y = spacing/2 + ((i - 6) * spacing) - 20;
-                } else if (i < 18) {
-                    // Bottom edge (6 tokens)
-                    const spacing = boardSize / 6;
-                    x = boardSize - spacing/2 - ((i - 12) * spacing) - 20;
-                    y = boardSize + borderOffset - 20;
-                } else {
-                    // Left edge (6 tokens)
-                    const spacing = boardSize / 6;
-                    x = -borderOffset;
-                    y = boardSize - spacing/2 - ((i - 18) * spacing) - 20;
-                }
-                
-                gameState.tokenSlots.push({ x, y, occupied: false, index: i });
-            }
-            
-            // Place 24 tokens in slots
-            boardTokens.forEach((token, i) => {
-                if (i < gameState.tokenSlots.length) {
-                    const slot = gameState.tokenSlots[i];
-                    gameState.tokenPositions[token.id] = {
-                        x: slot.x,
-                        y: slot.y,
-                        location: 'board',
-                        slotIndex: i
-                    };
-                    slot.occupied = token.id;
-                }
-            });
-            
-            // Store reserve tokens (5 tokens not initially on board)
-            reserveTokens.forEach(token => {
-                gameState.tokenPositions[token.id] = {
-                    x: 0,
-                    y: 0,
-                    location: 'reserve'
-                };
-            });
-            
-            // Combine all tokens but only display the 24 on board
-            gameState.successTokens = [...boardTokens, ...reserveTokens];
-            gameState.reserveTokens = reserveTokens.map(t => t.id);
-        }
-
-        function updateDisplay() {
-            // Update player info
-            document.getElementById('playerRole').textContent = 
-                myColor === 'blue' ? '🛡️ Hector (Blue)' : '⚔️ Achilles (Red)';
-            document.getElementById('currentTurn').textContent = 'Free Play Mode';
-            
-            // Update board
-            const boardEl = document.getElementById('board');
-            boardEl.innerHTML = '';
-            gameState.board.forEach((space, i) => {
-                const spaceEl = document.createElement('div');
-                spaceEl.className = `space ${space.color}`;
-                spaceEl.dataset.index = i;
-                
-                if (space.tile) {
-                    const tileEl = document.createElement('div');
-                    tileEl.className = `tile ${space.tile.color}`;
-                    if (space.tile.facedown) {
-                        tileEl.classList.add('facedown');
-                    } else if (space.tile.value === 'D') {
-                        tileEl.classList.add('dolos');
-                        tileEl.textContent = '✦';
-                    } else {
-                        tileEl.textContent = space.tile.value;
-                    }
-                    
-                    // Add X mark if tile is marked
-                    if (markedTiles.has(i)) {
-                        const markEl = document.createElement('div');
-                        markEl.className = 'tile-mark';
-                        markEl.textContent = '✕';
-                        tileEl.appendChild(markEl);
-                    }
-                    
-                    spaceEl.appendChild(tileEl);
-                }
-                
-                if (selectedBoardTile === i) {
-                    spaceEl.style.border = '3px solid #ffff00';
-                    spaceEl.style.boxShadow = '0 0 10px #ffff00';
-                }
-                
-                spaceEl.addEventListener('click', () => handleBoardClick(i));
-                
-                // Add right-click to mark tiles
-                spaceEl.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    
-                    if (space.tile) {
-                        if (markedTiles.has(i)) {
-                            markedTiles.delete(i);
-                            showMessage("Removed X mark");
-                        } else {
-                            markedTiles.add(i);
-                            showMessage("Added X mark");
-                        }
-                        updateDisplay();
-                        
-                        // Send mark update to opponent
-                        sendMove({ action: 'toggleMark', index: i, marked: markedTiles.has(i) });
-                    }
-                });
-                boardEl.appendChild(spaceEl);
-            });
-            
-            updateBoardTokens();
-            updateHand();
-        }
-
-        function updateHand() {
-            const handEl = document.getElementById('hand');
-            handEl.innerHTML = '';
-            const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
-            
-            document.getElementById('handCount').textContent = `(${myHand.length} tiles)`;
-            
-            myHand.forEach((tile, i) => {
-                const tileEl = document.createElement('div');
-                tileEl.className = `handTile ${myColor}`;
-                
-                if (tile === 'D') {
-                    tileEl.classList.add('dolos');
-                    tileEl.textContent = '✦';
-                } else {
-                    tileEl.textContent = tile;
-                }
-                
-                if (selectedTile === i) {
-                    tileEl.classList.add('selected');
-                }
-                
-                tileEl.addEventListener('click', () => selectTile(i));
-                handEl.appendChild(tileEl);
-            });
-            
-            // Debug info
-            document.getElementById('debugInfo').innerHTML = `
-                Deck: ${(myColor === 'blue' ? gameState.blueDeck : gameState.redDeck).length}/18 tiles remaining<br>
-                Hand values: [${myHand.join(', ')}]
-            `;
-        }
-
-        function updateTokenDisplay() {
-            const myTokensEl = document.getElementById('myTokens');
-            const oppTokensEl = document.getElementById('oppTokens');
-            const myTokens = myColor === 'blue' ? gameState.blueTokens : gameState.redTokens;
-            const oppTokens = myColor === 'blue' ? gameState.redTokens : gameState.blueTokens;
-            
-            myTokensEl.innerHTML = '';
-            oppTokensEl.innerHTML = '';
-            
-            myTokens.forEach(token => {
-                const tokenEl = createTokenElement(token);
-                myTokensEl.appendChild(tokenEl);
-            });
-            
-            oppTokens.forEach(token => {
-                const tokenEl = createTokenElement(token);
-                oppTokensEl.appendChild(tokenEl);
-            });
-        }
-
-        function createTokenElement(token) {
-            const tokenEl = document.createElement('div');
-            tokenEl.className = 'token';
-            
-            if (token.type === 'god') {
-                tokenEl.classList.add(token.god.toLowerCase());
-                tokenEl.textContent = token.god[0] + token.value;
-            } else if (token.type === 'positive') {
-                tokenEl.classList.add('positive');
-                tokenEl.textContent = '+' + token.value;
-            } else if (token.type === 'negative') {
-                tokenEl.classList.add('negative');
-                tokenEl.textContent = token.value;
-            } else if (token.type === 'marriage') {
-                tokenEl.classList.add('marriage');
-                tokenEl.textContent = '💍';
-            }
-            
-            return tokenEl;
-        }
-
-        function updateBoardTokens() {
-            // Remove old token display
-            document.getElementById('successTokenDisplay').innerHTML = '';
-            
-            // Remove existing draggable tokens and slots
-            document.querySelectorAll('.successToken').forEach(el => el.remove());
-            document.querySelectorAll('.tokenSlot').forEach(el => el.remove());
-            
-            // Remove old event listeners
-            const boardContainer = document.getElementById('board').parentElement;
-            const newBoardContainer = boardContainer.cloneNode(true);
-            boardContainer.parentNode.replaceChild(newBoardContainer, boardContainer);
-            
-            const boardEl = newBoardContainer.querySelector('#board');
-            boardEl.innerHTML = '';
-            
-            // Create border and drop zone
-            let borderEl = newBoardContainer.querySelector('#boardBorder');
-            if (!borderEl) {
-                borderEl = document.createElement('div');
-                borderEl.id = 'boardBorder';
-                newBoardContainer.appendChild(borderEl);
-            }
-            
-            let dropZone = newBoardContainer.querySelector('#tokenDropZone');
-            if (!dropZone) {
-                dropZone = document.createElement('div');
-                dropZone.id = 'tokenDropZone';
-                newBoardContainer.appendChild(dropZone);
-            }
-            
-            // Create token slots
-            if (gameState.tokenSlots) {
-                gameState.tokenSlots.forEach(slot => {
-                    const slotEl = document.createElement('div');
-                    slotEl.className = 'tokenSlot';
-                    slotEl.dataset.slotIndex = slot.index;
-                    slotEl.style.left = (slot.x + 75) + 'px'; // Adjust for larger border
-                    slotEl.style.top = (slot.y + 75) + 'px';
-                    
-                    if (slot.occupied) {
-                        slotEl.classList.add('occupied');
-                    }
-                    
-                    slotEl.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        slotEl.classList.add('dragover');
-                    });
-                    
-                    slotEl.addEventListener('dragleave', () => {
-                        slotEl.classList.remove('dragover');
-                    });
-                    
-                    slotEl.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        slotEl.classList.remove('dragover');
-                        handleSlotDrop(e, slot.index);
-                    });
-                    
-                    dropZone.appendChild(slotEl);
-                });
-            }
-            
-            // Recreate board spaces
-            gameState.board.forEach((space, i) => {
-                const spaceEl = document.createElement('div');
-                spaceEl.className = `space ${space.color}`;
-                spaceEl.dataset.index = i;
-                
-                if (space.tile) {
-                    const tileEl = document.createElement('div');
-                    tileEl.className = `tile ${space.tile.color}`;
-                    if (space.tile.facedown) {
-                        tileEl.classList.add('facedown');
-                    } else if (space.tile.value === 'D') {
-                        tileEl.classList.add('dolos');
-                        tileEl.textContent = '✦';
-                    } else {
-                        tileEl.textContent = space.tile.value;
-                    }
-                    
-                    // Add X mark if tile is marked
-                    if (markedTiles.has(i)) {
-                        const markEl = document.createElement('div');
-                        markEl.className = 'tile-mark';
-                        markEl.textContent = '✕';
-                        tileEl.appendChild(markEl);
-                    }
-                    
-                    spaceEl.appendChild(tileEl);
-                }
-                
-                if (selectedBoardTile === i) {
-                    spaceEl.style.border = '3px solid #ffff00';
-                    spaceEl.style.boxShadow = '0 0 10px #ffff00';
-                }
-                
-                spaceEl.addEventListener('click', () => handleBoardClick(i));
-                
-                // Add right-click to mark tiles
-                spaceEl.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    
-                    if (space.tile) {
-                        if (markedTiles.has(i)) {
-                            markedTiles.delete(i);
-                            showMessage("Removed X mark");
-                        } else {
-                            markedTiles.add(i);
-                            showMessage("Added X mark");
-                        }
-                        updateDisplay();
-                        
-                        // Send mark update to opponent
-                        sendMove({ action: 'toggleMark', index: i, marked: markedTiles.has(i) });
-                    }
-                });
-                
-                boardEl.appendChild(spaceEl);
-            });
-            
-            newBoardContainer.style.position = 'relative';
-            
-            // Create draggable tokens
-            gameState.successTokens.forEach(token => {
-                // Skip reserve tokens (not on board initially)
-                const pos = gameState.tokenPositions[token.id];
-                if (pos.location === 'reserve') return;
-                
-                const tokenEl = document.createElement('div');
-                tokenEl.className = 'successToken';
-                tokenEl.id = token.id;
-                tokenEl.draggable = true;
-                
-                // Set token appearance
-                if (token.type === 'god') {
-                    tokenEl.classList.add(token.god.toLowerCase());
-                    tokenEl.textContent = token.god[0] + token.value;
-                    tokenEl.title = `${token.god}: ${token.value}`;
-                } else if (token.type === 'positive') {
-                    tokenEl.classList.add('positive');
-                    tokenEl.textContent = '+' + token.value;
-                    tokenEl.title = `${token.item}: +${token.value}`;
-                } else if (token.type === 'negative') {
-                    tokenEl.classList.add('negative');
-                    tokenEl.textContent = token.value;
-                    tokenEl.title = `${token.item}: ${token.value}`;
-                } else if (token.type === 'marriage') {
-                    tokenEl.classList.add('marriage');
-                    tokenEl.textContent = '💍';
-                    tokenEl.title = 'Marriage to Helen';
-                }
-                
-                // Set position (using already declared pos variable)
-                if (pos.location === 'board') {
-                    tokenEl.style.left = (pos.x + 75) + 'px'; // Adjust for larger border
-                    tokenEl.style.top = (pos.y + 75) + 'px';
-                    newBoardContainer.appendChild(tokenEl);
-                } else if (pos.location === myColor) {
-                    tokenEl.style.position = 'relative';
-                    tokenEl.style.left = '';
-                    tokenEl.style.top = '';
-                    document.getElementById('myTokenStorage').appendChild(tokenEl);
-                } else if (pos.location === (myColor === 'blue' ? 'red' : 'blue')) {
-                    tokenEl.style.position = 'relative';
-                    tokenEl.style.left = '';
-                    tokenEl.style.top = '';
-                    document.getElementById('oppTokenStorage').appendChild(tokenEl);
-                }
-                
-                // Add drag event listeners
-                tokenEl.addEventListener('dragstart', handleTokenDragStart);
-                tokenEl.addEventListener('dragend', handleTokenDragEnd);
-            });
-            
-            // Add drop zone listeners
-            newBoardContainer.addEventListener('dragover', handleBoardDragOver);
-            newBoardContainer.addEventListener('drop', handleBoardDrop);
-            
-            const myStorage = document.getElementById('myTokenStorage');
-            const newMyStorage = myStorage.cloneNode(false);
-            myStorage.parentNode.replaceChild(newMyStorage, myStorage);
-            
-            // Move tokens to new storage
-            document.querySelectorAll('.successToken').forEach(token => {
-                const pos = gameState.tokenPositions[token.id];
-                if (pos && pos.location === myColor) {
-                    newMyStorage.appendChild(token);
-                }
-            });
-            
-            newMyStorage.addEventListener('dragover', handleStorageDragOver);
-            newMyStorage.addEventListener('drop', handleStorageDrop);
-            newMyStorage.addEventListener('dragleave', handleStorageDragLeave);
-        }
-        
-        let draggedToken = null;
-        
-        function handleTokenDragStart(e) {
-            draggedToken = e.target;
-            e.target.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            
-            // Clear old slot if token was in one
-            const tokenId = e.target.id;
-            const pos = gameState.tokenPositions[tokenId];
-            if (pos && pos.slotIndex !== undefined) {
-                const slot = gameState.tokenSlots[pos.slotIndex];
-                if (slot) {
-                    slot.occupied = false;
-                }
-            }
-        }
-        
-        function handleTokenDragEnd(e) {
-            e.target.classList.remove('dragging');
-            draggedToken = null;
-        }
-        
-        function handleBoardDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        }
-        
-        function handleBoardDrop(e) {
-            e.preventDefault();
-            if (!draggedToken) return;
-            
-            const boardContainer = document.getElementById('board').parentElement;
-            const rect = boardContainer.getBoundingClientRect();
-            const x = e.clientX - rect.left - 75; // Adjust for larger border
-            const y = e.clientY - rect.top - 75;
-            
-            const tokenId = draggedToken.id;
-            gameState.tokenPositions[tokenId] = { x, y, location: 'board' };
-            
-            draggedToken.style.position = 'absolute';
-            draggedToken.style.left = (x + 75) + 'px';
-            draggedToken.style.top = (y + 75) + 'px';
-            boardContainer.appendChild(draggedToken);
-            
-            sendMove({ action: 'moveToken', tokenId, position: gameState.tokenPositions[tokenId] });
-        }
-        
-        function handleSlotDrop(e, slotIndex) {
-            if (!draggedToken) return;
-            
-            const slot = gameState.tokenSlots[slotIndex];
-            const tokenId = draggedToken.id;
-            
-            // Clear any other slot that might have this token
-            gameState.tokenSlots.forEach(s => {
-                if (s.occupied === tokenId) {
-                    s.occupied = false;
-                }
-            });
-            
-            // Place token in slot
-            slot.occupied = tokenId;
-            gameState.tokenPositions[tokenId] = { 
-                x: slot.x, 
-                y: slot.y, 
-                location: 'board',
-                slotIndex: slotIndex
-            };
-            
-            const boardContainer = document.getElementById('board').parentElement;
-            draggedToken.style.position = 'absolute';
-            draggedToken.style.left = (slot.x + 75) + 'px';
-            draggedToken.style.top = (slot.y + 75) + 'px';
-            boardContainer.appendChild(draggedToken);
-            
-            sendMove({ action: 'moveToken', tokenId, position: gameState.tokenPositions[tokenId] });
-        }
-        
-        function handleStorageDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            e.currentTarget.classList.add('dragover');
-        }
-        
-        function handleStorageDragLeave(e) {
-            e.currentTarget.classList.remove('dragover');
-        }
-        
-        function handleStorageDrop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('dragover');
-            if (!draggedToken) return;
-            
-            const tokenId = draggedToken.id;
-            gameState.tokenPositions[tokenId] = { x: 0, y: 0, location: myColor };
-            
-            draggedToken.style.position = 'relative';
-            draggedToken.style.left = '';
-            draggedToken.style.top = '';
-            e.currentTarget.appendChild(draggedToken);
-            
-            sendMove({ action: 'moveToken', tokenId, position: gameState.tokenPositions[tokenId] });
-        }
-
-        function getGodColor(god) {
-            const colors = {
-                'Zeus': '#6a6a6a',
-                'Apollo': '#f4a460',
-                'Athena': '#d8bfd8',
-                'Poseidon': '#4682b4',
-                'Aphrodite': '#ff69b4'
-            };
-            return colors[god] || '#808080';
-        }
-
-        function selectTile(index) {
-            selectedTile = selectedTile === index ? null : index;
-            updateHand();
-            if (selectedTile !== null) {
-                const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
-                showMessage(`Selected tile: ${myHand[selectedTile]}`);
-            }
-        }
-
-        function handleBoardClick(index) {
-            if (effectMode) {
-                handleEffectClick(index);
-                return;
-            }
-            
-            const space = gameState.board[index];
-            
-            // If clicking on an existing tile
             if (space.tile) {
-                // Only allow picking up your own tiles (unless in effect mode)
-                if (space.tile.color === myColor) {
-                    if (selectedBoardTile === index) {
-                        // Deselect if clicking same tile
-                        selectedBoardTile = null;
-                        showMessage("Tile deselected");
-                    } else {
-                        // Pick up the tile
-                        selectedBoardTile = index;
-                        selectedTile = null; // Deselect hand tile if any
-                        showMessage(`Picked up ${space.tile.value} tile. Click empty space to reposition.`);
-                    }
-                    updateDisplay();
-                    return;
-                } else {
-                    showMessage("You can only move your own tiles!");
-                    return;
+                const t = document.createElement('div');
+                t.className = `tile ${space.tile.color}`;
+                if      (space.tile.facedown)        t.classList.add('facedown');
+                else if (space.tile.value === 'D') { t.classList.add('dolos'); t.textContent = '✦'; }
+                else                                 t.textContent = space.tile.value;
+
+                if (markedTiles.has(i)) {
+                    const m = document.createElement('div');
+                    m.className = 'tile-mark'; m.textContent = '✕';
+                    t.appendChild(m);
                 }
+                sp.appendChild(t);
             }
-            
-            // If we have a board tile selected, try to place it
-            if (selectedBoardTile !== null) {
-                const sourceTile = gameState.board[selectedBoardTile].tile;
-                
-                // Check if new position is valid
-                if (space.color !== myColor && !hasNeighborExcept(index, selectedBoardTile)) {
-                    showMessage("Can only place on your color or adjacent to existing tiles!");
-                    return;
-                }
-                
-                // Move the tile
-                gameState.board[selectedBoardTile].tile = null;
-                space.tile = sourceTile;
-                
-                // Send move
-                sendMove({ action: 'reposition', from: selectedBoardTile, to: index, tile: sourceTile });
-                
-                selectedBoardTile = null;
-                updateDisplay();
-                showMessage(`Moved tile to new position`);
-                return;
-            }
-            
-            // If we have a hand tile selected, place it normally
-            if (selectedTile === null) {
-                showMessage("Select a tile from your hand or board first!");
-                return;
-            }
-            
-            if (space.color !== myColor && !hasNeighbor(index)) {
-                showMessage("Can only place on your color or adjacent to existing tiles!");
-                return;
-            }
-            
-            const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
-            const tileValue = myHand[selectedTile];
-            
-            // Place tile
-            space.tile = { value: tileValue, color: myColor, facedown: false };
-            myHand.splice(selectedTile, 1);
-            selectedTile = null;
-            
-            // Send move first
-            sendMove({ action: 'placeTile', index, tile: space.tile });
-            
-            // Apply effect
-            if (tileValue !== 'D' && tileValue !== 5) {
-                applyTileEffect(tileValue, index);
-            }
-            
-            updateDisplay();
-        }
 
-        function hasNeighbor(index) {
-            const neighbors = getNeighbors(index);
-            return neighbors.some(i => gameState.board[i] && gameState.board[i].tile);
-        }
+            sp.addEventListener('click',       () => handleSpaceClick(i));
+            sp.addEventListener('contextmenu', e  => handleRightClick(e, i));
+            boardEl.appendChild(sp);
+        });
 
-        function getNeighbors(index) {
-            const neighbors = [];
-            const row = Math.floor(index / 6);
-            const col = index % 6;
-            
-            if (row > 0) neighbors.push(index - 6);
-            if (row < 5) neighbors.push(index + 6);
-            if (col > 0) neighbors.push(index - 1);
-            if (col < 5) neighbors.push(index + 1);
-            
-            return neighbors;
-        }
+        const container = document.getElementById('boardContainer');
+        const myStore   = document.getElementById('myTokenStorage');
+        const oppStore  = document.getElementById('oppTokenStorage');
 
-        function getGodColor(god) {
-            const colors = {
-                'Zeus': '#6a6a6a',
-                'Apollo': '#f4a460',
-                'Athena': '#d8bfd8',
-                'Poseidon': '#4682b4',
-                'Aphrodite': '#ff69b4'
-            };
-            return colors[god] || '#808080';
-        }
+        document.querySelectorAll('.successToken, .tokenSlot').forEach(el => el.remove());
+        myStore.innerHTML = oppStore.innerHTML = '';
 
-        function hasNeighborExcept(index, exceptIndex) {
-            const neighbors = getNeighbors(index);
-            return neighbors.some(i => i !== exceptIndex && gameState.board[i] && gameState.board[i].tile);
-        }
+        gs.tokenSlots.forEach(slot => {
+            const el = document.createElement('div');
+            el.className = `tokenSlot${slot.occupied ? ' occupied' : ''}`;
+            el.style.left = slot.x + 'px';
+            el.style.top  = slot.y + 'px';
+            el.addEventListener('dragover',  e => { e.preventDefault(); e.stopPropagation(); el.classList.add('dragover'); });
+            el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+            el.addEventListener('drop',      e => { e.preventDefault(); e.stopPropagation(); el.classList.remove('dragover'); snapToSlot(slot.index); });
+            container.appendChild(el);
+        });
 
-        function applyTileEffect(value, index) {
-            switch(value) {
-                case 1:
-                    showMessage("Effect: Click an opponent's tile to reposition");
-                    effectMode = 'reposition-opponent';
-                    break;
-                case 2:
-                    showMessage("Effect: Click your tile to reposition");
-                    effectMode = 'reposition-own';
-                    break;
-                case 3:
-                    showMessage("Effect: Token swap not implemented - no effect");
-                    // Token swapping would need to be implemented after line scoring
-                    break;
-                case 4:
-                    showMessage("Effect: Players may mark tiles with X (right-click tiles)");
-                    // No automatic flipping - players handle this manually
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        function handleEffectClick(index) {
-            const space = gameState.board[index];
-            
-            if (effectMode === 'reposition-opponent') {
-                if (space.tile && space.tile.color !== myColor && isAccessible(index)) {
-                    const tile = space.tile;
-                    space.tile = null;
-                    effectMode = 'place-repositioned';
-                    effectData = tile;
-                    showMessage("Click empty space to place tile");
-                    sendMove({ action: 'reposition', from: index });
-                }
-            } else if (effectMode === 'reposition-own') {
-                if (space.tile && space.tile.color === myColor && isAccessible(index)) {
-                    const tile = space.tile;
-                    space.tile = null;
-                    effectMode = 'place-repositioned';
-                    effectData = tile;
-                    showMessage("Click empty space to place tile");
-                    sendMove({ action: 'reposition', from: index });
-                }
-            } else if (effectMode === 'place-repositioned') {
-                if (!space.tile && (space.color === effectData.color || hasNeighbor(index))) {
-                    space.tile = effectData;
-                    effectMode = null;
-                    effectData = null;
-                    sendMove({ action: 'placeRepositioned', to: index, tile: space.tile });
-                }
-            }
-            
-            updateDisplay();
-        }
-
-        function isAccessible(index) {
-            const neighbors = getNeighbors(index);
-            return neighbors.some(i => !gameState.board[i] || !gameState.board[i].tile);
-        }
-
-        function checkLines() {
-            // Check rows
-            for (let row = 0; row < 6; row++) {
-                if (isLineFull(row * 6, 1)) {
-                    scoreLine(row * 6, 1);
-                }
-            }
-            // Check columns
-            for (let col = 0; col < 6; col++) {
-                if (isLineFull(col, 6)) {
-                    scoreLine(col, 6);
-                }
-            }
-        }
-
-        function isLineFull(start, step) {
-            for (let i = 0; i < 6; i++) {
-                if (!gameState.board[start + i * step].tile) return false;
-            }
-            return true;
-        }
-
-        function scoreLine(start, step) {
-            const blueTiles = [];
-            const redTiles = [];
-            
-            for (let i = 0; i < 6; i++) {
-                const tile = gameState.board[start + i * step].tile;
-                if (tile && !tile.facedown) {
-                    if (tile.color === 'blue') {
-                        blueTiles.push(tile.value === 'D' ? 0 : tile.value);
-                    } else {
-                        redTiles.push(tile.value === 'D' ? 0 : tile.value);
-                    }
-                }
-            }
-            
-            const blueScore = blueTiles.reduce((a, b) => a + b, 0);
-            const redScore = redTiles.reduce((a, b) => a + b, 0);
-            
-            showMessage(`Line scored! Blue: ${blueScore}, Red: ${redScore}`);
-        }
-
-        function endTurn() {
-            checkLines();
-            updateDisplay();
-            sendGameState();
-        }
-
-        function handleOpponentMove(data) {
-            if (data.action === 'placeTile') {
-                gameState.board[data.index].tile = data.tile;
-            } else if (data.action === 'reposition') {
-                gameState.board[data.from].tile = null;
-                gameState.board[data.to].tile = data.tile;
-            } else if (data.action === 'placeRepositioned') {
-                gameState.board[data.to].tile = data.tile;
-            } else if (data.action === 'toggleMark') {
-                if (data.marked) {
-                    markedTiles.add(data.index);
-                } else {
-                    markedTiles.delete(data.index);
-                }
-            } else if (data.action === 'moveToken') {
-                gameState.tokenPositions[data.tokenId] = data.position;
-            }
-            updateDisplay();
-        }
-
-        function sendMove(move) {
-            if (conn && conn.open) {
-                conn.send({ type: 'move', ...move });
-            }
-        }
-
-        function sendGameState() {
-            if (conn && conn.open) {
-                conn.send({ type: 'gameState', state: gameState });
-            }
-        }
-
-        function showMessage(msg) {
-            document.getElementById('message').textContent = msg;
-        }
-
-        function shuffleArray(array) {
-            const newArray = [...array];
-            for (let i = newArray.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-            }
-            return newArray;
-        }
-
-        document.getElementById('drawTile').addEventListener('click', () => {
-            const myHand = myColor === 'blue' ? gameState.blueHand : gameState.redHand;
-            const myDeck = myColor === 'blue' ? gameState.blueDeck : gameState.redDeck;
-            
-            if (myHand.length < 2 && myDeck.length > 0) {
-                myHand.push(myDeck.pop());
-                updateDisplay();
-                sendGameState();
-                showMessage(`Drew tile: ${myHand[myHand.length - 1]}`);
-            } else if (myDeck.length === 0) {
-                showMessage("No more tiles in deck!");
+        gs.successTokens.forEach(token => {
+            const pos = gs.tokenPositions[token.id];
+            if (!pos || pos.location === 'reserve') return;
+            const el = makeTokenEl(token);
+            if (pos.location === 'board') {
+                el.style.left = pos.x + 'px';
+                el.style.top  = pos.y + 'px';
+                container.appendChild(el);
+            } else if (pos.location === myColor) {
+                myStore.appendChild(el);
             } else {
-                showMessage("Hand is full (max 2 tiles)!");
+                oppStore.appendChild(el);
             }
         });
-        
-        document.getElementById('checkLines').addEventListener('click', () => {
-            checkLines();
-            sendGameState();
+
+        container.addEventListener('dragover', e => e.preventDefault());
+        container.addEventListener('drop',     handleFreeDrop);
+
+        myStore.addEventListener('dragover',  e => { e.preventDefault(); myStore.classList.add('dragover'); });
+        myStore.addEventListener('dragleave', () => myStore.classList.remove('dragover'));
+        myStore.addEventListener('drop', e => {
+            e.preventDefault(); myStore.classList.remove('dragover');
+            if (!dragToken) return;
+            const id = dragToken.id;
+            clearSlot(id);
+            gs.tokenPositions[id] = { location: myColor };
+            render();
+            sendMove({ action:'moveToken', tokenId:id, position:gs.tokenPositions[id] });
         });
-    </script>
+    }
+
+    function makeTokenEl(token) {
+        const el = document.createElement('div');
+        el.id = token.id;
+        el.className = 'successToken';
+        el.draggable = true;
+        if (token.type === 'god') {
+            el.classList.add(token.god.toLowerCase());
+            el.textContent = token.god[0] + token.value;
+            el.title = `${token.god}: ${token.value}`;
+        } else if (token.type === 'positive') {
+            el.classList.add('positive');
+            el.textContent = `+${token.value}`;
+            el.title = `${token.item}: +${token.value}`;
+        } else if (token.type === 'negative') {
+            el.classList.add('negative');
+            el.textContent = token.value;
+            el.title = `${token.item}: ${token.value}`;
+        } else {
+            el.classList.add('marriage');
+            el.textContent = '💍';
+            el.title = 'Marriage to Helen';
+        }
+        el.addEventListener('dragstart', e => { dragToken = el; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+        el.addEventListener('dragend',   () => { el.classList.remove('dragging'); dragToken = null; });
+        return el;
+    }
+
+    // ── Token drag ────────────────────────────────────────────────────────────
+    function clearSlot(tokenId) {
+        gs.tokenSlots.forEach(s => { if (s.occupied === tokenId) s.occupied = null; });
+    }
+    function snapToSlot(slotIdx) {
+        if (!dragToken) return;
+        const id = dragToken.id, slot = gs.tokenSlots[slotIdx];
+        clearSlot(id);
+        slot.occupied = id;
+        gs.tokenPositions[id] = { x: slot.x, y: slot.y, location: 'board' };
+        render();
+        sendMove({ action:'moveToken', tokenId:id, position:gs.tokenPositions[id] });
+    }
+    function handleFreeDrop(e) {
+        e.preventDefault();
+        if (!dragToken || e.target.classList.contains('tokenSlot')) return;
+        const id   = dragToken.id;
+        const rect = document.getElementById('boardContainer').getBoundingClientRect();
+        clearSlot(id);
+        gs.tokenPositions[id] = { x: e.clientX - rect.left, y: e.clientY - rect.top, location: 'board' };
+        render();
+        sendMove({ action:'moveToken', tokenId:id, position:gs.tokenPositions[id] });
+    }
+
+    // ── Tile placement ────────────────────────────────────────────────────────
+    function selectHandTile(i) {
+        selHandIdx  = selHandIdx === i ? null : i;
+        selBoardIdx = null;
+        render();
+        if (selHandIdx !== null) showMsg(`Selected tile: ${hand()[selHandIdx]}`);
+    }
+
+    function handleSpaceClick(i) {
+        if (effectMode) { handleEffect(i); return; }
+        const space = gs.board[i];
+
+        if (space.tile && space.tile.color === myColor) {
+            if (selBoardIdx === i) { selBoardIdx = null; showMsg('Tile deselected'); }
+            else {
+                selBoardIdx = i; selHandIdx = null;
+                showMsg(`Picked up ${space.tile.value === 'D' ? '✦' : space.tile.value} — click empty space to move`);
+            }
+            render(); return;
+        }
+
+        if (selBoardIdx !== null && !space.tile) {
+            if (space.color !== myColor && !neighborExcept(i, selBoardIdx)) {
+                showMsg('Invalid position — must be your colour or adjacent to an existing tile'); return;
+            }
+            const tile = gs.board[selBoardIdx].tile;
+            gs.board[selBoardIdx].tile = null;
+            space.tile = tile;
+            sendMove({ action:'reposition', from:selBoardIdx, to:i, tile });
+            selBoardIdx = null; showMsg('Tile moved');
+            render(); return;
+        }
+
+        if (selHandIdx === null) { showMsg('Select a tile from your hand first'); return; }
+        if (space.tile)          { showMsg('Space already occupied'); return; }
+        if (space.color !== myColor && !hasNeighbor(i)) {
+            showMsg('Must place on your colour or adjacent to an existing tile'); return;
+        }
+
+        const v = hand()[selHandIdx];
+        space.tile = { value: v, color: myColor, facedown: false };
+        hand().splice(selHandIdx, 1);
+        selHandIdx = null;
+        sendMove({ action:'placeTile', index:i, tile:space.tile });
+        triggerEffect(v);
+        render();
+    }
+
+    function handleRightClick(e, i) {
+        e.preventDefault();
+        if (!gs.board[i].tile) return;
+        if (markedTiles.has(i)) { markedTiles.delete(i); showMsg('X mark removed'); }
+        else                    { markedTiles.add(i);    showMsg('X mark added'); }
+        render();
+        sendMove({ action:'toggleMark', index:i, marked:markedTiles.has(i) });
+    }
+
+    function triggerEffect(v) {
+        switch (v) {
+            case 1: showMsg("Effect — click an opponent's accessible tile to reposition it"); effectMode = 'reposition-opponent'; break;
+            case 2: showMsg('Effect — click one of your own accessible tiles to reposition it'); effectMode = 'reposition-own'; break;
+            case 3: showMsg('Effect — swap one of your success tokens with a displayed board token'); break;
+            case 4: showMsg('Effect — right-click tiles to mark them face-down with X'); break;
+        }
+    }
+
+    function handleEffect(i) {
+        const space = gs.board[i];
+        if (effectMode === 'reposition-opponent') {
+            if (space.tile && space.tile.color !== myColor && isAccessible(i)) {
+                effectTile = space.tile; space.tile = null;
+                effectMode = 'place-repositioned';
+                showMsg('Now click an empty space to place the tile');
+                sendMove({ action:'clearTile', index:i });
+            }
+        } else if (effectMode === 'reposition-own') {
+            if (space.tile && space.tile.color === myColor && isAccessible(i)) {
+                effectTile = space.tile; space.tile = null;
+                effectMode = 'place-repositioned';
+                showMsg('Now click an empty space to place the tile');
+                sendMove({ action:'clearTile', index:i });
+            }
+        } else if (effectMode === 'place-repositioned') {
+            if (!space.tile && (space.color === effectTile.color || hasNeighbor(i))) {
+                space.tile = effectTile;
+                sendMove({ action:'placeTile', index:i, tile:space.tile });
+                effectMode = null; effectTile = null;
+                showMsg('Tile repositioned');
+            }
+        }
+        render();
+    }
+
+    // ── Line scoring ──────────────────────────────────────────────────────────
+    function checkLines() {
+        let found = false;
+        for (let r = 0; r < 6; r++) if (lineFull(r*6,1)) { scoreLine(r*6,1); found = true; }
+        for (let c = 0; c < 6; c++) if (lineFull(c,  6)) { scoreLine(c,  6); found = true; }
+        if (!found) showMsg('No completed lines found');
+        render(); sendState();
+    }
+    function lineFull(start, step) {
+        for (let i = 0; i < 6; i++) if (!gs.board[start+i*step].tile) return false;
+        return true;
+    }
+    function scoreLine(start, step) {
+        let blue = 0, red = 0;
+        for (let i = 0; i < 6; i++) {
+            const t = gs.board[start+i*step].tile;
+            if (!t || t.facedown || t.value === 'D') continue;
+            t.color === 'blue' ? blue += t.value : red += t.value;
+        }
+        const result = blue > red ? 'Blue wins!' : red > blue ? 'Red wins!' : 'Tie!';
+        showMsg(`Line scored — Blue: ${blue}  ·  Red: ${red}  →  ${result}`);
+    }
+
+    // ── Networking ────────────────────────────────────────────────────────────
+    function sendMove(move) { if (conn?.open) conn.send({ type:'move', ...move }); }
+    function sendState()    { if (conn?.open) conn.send({ type:'gameState', state:gs }); }
+
+    function applyOpponentMove(data) {
+        switch (data.action) {
+            case 'placeTile':  gs.board[data.index].tile = data.tile; break;
+            case 'clearTile':  gs.board[data.index].tile = null;      break;
+            case 'reposition':
+                gs.board[data.from].tile = null;
+                gs.board[data.to].tile   = data.tile;
+                break;
+            case 'toggleMark':
+                data.marked ? markedTiles.add(data.index) : markedTiles.delete(data.index);
+                break;
+            case 'moveToken': {
+                const pos = data.position;
+                gs.tokenPositions[data.tokenId] = pos;
+                gs.tokenSlots.forEach(s => { if (s.occupied === data.tokenId) s.occupied = null; });
+                if (pos.location === 'board') {
+                    const slot = gs.tokenSlots.find(s => s.x === pos.x && s.y === pos.y);
+                    if (slot) slot.occupied = data.tokenId;
+                }
+                break;
+            }
+        }
+        render();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function hand() { return myColor === 'blue' ? gs.blueHand : gs.redHand; }
+    function deck() { return myColor === 'blue' ? gs.blueDeck : gs.redDeck; }
+
+    function neighbors(i) {
+        const n = [], r = Math.floor(i/6), c = i%6;
+        if (r > 0) n.push(i-6); if (r < 5) n.push(i+6);
+        if (c > 0) n.push(i-1); if (c < 5) n.push(i+1);
+        return n;
+    }
+    function hasNeighbor(i)          { return neighbors(i).some(n => gs.board[n]?.tile); }
+    function neighborExcept(i, excl) { return neighbors(i).some(n => n !== excl && gs.board[n]?.tile); }
+    function isAccessible(i)         { return neighbors(i).some(n => !gs.board[n]?.tile); }
+
+    function shuffle(a) {
+        const b = [...a];
+        for (let i = b.length-1; i > 0; i--) {
+            const j = Math.floor(Math.random()*(i+1));
+            [b[i],b[j]] = [b[j],b[i]];
+        }
+        return b;
+    }
+    function showMsg(msg) { document.getElementById('message').textContent = msg; }
+
+    // ── Buttons ───────────────────────────────────────────────────────────────
+    document.getElementById('drawTile').addEventListener('click', () => {
+        const h = hand(), d = deck();
+        if (h.length >= 2)  { showMsg('Hand is full (max 2 tiles)'); return; }
+        if (d.length === 0) { showMsg('No tiles left in deck');      return; }
+        h.push(d.pop());
+        render(); sendState();
+        showMsg(`Drew: ${h[h.length-1]}`);
+    });
+    document.getElementById('checkLinesBtn').addEventListener('click', checkLines);
+</script>
 </body>
 </html>
