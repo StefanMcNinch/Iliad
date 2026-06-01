@@ -509,6 +509,7 @@
             <div id="hand"></div>
             <button id="drawTile"      style="margin-top:12px;width:100%;padding:8px">Draw Tile</button>
             <button id="checkLinesBtn" style="margin-top:6px; width:100%;padding:8px">Check Scoring Lines</button>
+            <button id="syncBtn"       style="margin-top:6px; width:100%;padding:8px;background:linear-gradient(150deg,#446,#668);">⟳ Sync State</button>
             <div id="debugInfo"></div>
         </div>
 
@@ -574,9 +575,35 @@
     let dragToken    = null;
 
     // ── PeerJS ────────────────────────────────────────────────────────────────
-    peer = new Peer();
-    peer.on('open', id => { myId = id; document.getElementById('myId').textContent = id; });
-    peer.on('connection', c => { conn = c; isHost = true; myColor = 'blue'; setupConn(); initGame(); });
+    peer = new Peer(undefined, {
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+            ]
+        }
+    });
+
+    peer.on('open', id => {
+        myId = id;
+        document.getElementById('myId').textContent = id;
+        document.getElementById('status').textContent = 'Ready — share your ID or enter opponent\'s ID';
+    });
+
+    peer.on('error', err => {
+        console.error('PeerJS error:', err);
+        document.getElementById('status').textContent = `Connection error: ${err.type}`;
+    });
+
+    peer.on('connection', c => {
+        conn = c;
+        isHost = true;
+        myColor = 'blue';
+        conn.on('open', () => {
+            setupConn();
+            initGame();
+        });
+    });
 
     document.getElementById('copyId').addEventListener('click', () => {
         navigator.clipboard.writeText(myId);
@@ -587,16 +614,21 @@
 
     document.getElementById('connectBtn').addEventListener('click', () => {
         const id = document.getElementById('peerId').value.trim();
-        if (id && id !== myId) {
-            conn = peer.connect(id);
-            isHost = false; myColor = 'red';
-            conn.on('open', setupConn);
-        }
+        if (!id || id === myId) return;
+        document.getElementById('status').textContent = 'Connecting...';
+        conn = peer.connect(id, { reliable: true });
+        isHost = false; myColor = 'red';
+        conn.on('open', () => {
+            document.getElementById('status').textContent = 'Connected! Waiting for host...';
+            setupConn();
+        });
+        conn.on('error', err => {
+            document.getElementById('status').textContent = `Failed to connect: ${err}`;
+        });
     });
 
     // ── Connection setup ──────────────────────────────────────────────────────
     function setupConn() {
-        document.getElementById('status').textContent = 'Connected!';
         document.getElementById('connectionPanel').style.display = 'none';
         document.getElementById('gameBoard').style.display = 'grid';
 
@@ -605,8 +637,9 @@
             else if (data.type === 'move') applyOpponentMove(data);
         });
         conn.on('close', () => showMsg('Opponent disconnected'));
+        conn.on('error', err => showMsg(`Connection error: ${err}`));
 
-        if (isHost) setTimeout(sendState, 150);
+        if (isHost) setTimeout(sendState, 500);
     }
 
     // ── Game init ─────────────────────────────────────────────────────────────
@@ -1004,6 +1037,7 @@
         showMsg(`Drew: ${h[h.length-1]}`);
     });
     document.getElementById('checkLinesBtn').addEventListener('click', checkLines);
+    document.getElementById('syncBtn').addEventListener('click', () => { sendState(); showMsg('State synced'); });
 </script>
 </body>
 </html>
